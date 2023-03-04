@@ -906,7 +906,10 @@ class ModalWait:
 
         self._result = None
         self._error = None
+        # emitted when the async task completes
         self.signal_task_done = signalslot.Signal()
+        # emitted when the dialog is dismissed
+        self.signal_task_dismiss = signalslot.Signal()
         # Replace the output text:
         # - replaces 'Please Wait...' while waiting
         # - replaces the final message after completion
@@ -929,16 +932,6 @@ class ModalWait:
     def override_output_text(self, value):
         self._override_output_text = value
 
-    def _draw_button(self):
-        dismiss = False
-        if self._error is None:
-            dismiss = imgui.button('OK')
-        else:
-            imgui.push_style_color(imgui.COLOR_BUTTON, 1, 0, 0)
-            dismiss = imgui.button('ERROR')
-            imgui.pop_style_color()
-        return dismiss
-
     def draw(self):
         # This would be a lot more simple if I had found a way to have imgui auto resize the layout based on content
         # But either I'm too dumb to figure it out, or it's not possible in 1.77
@@ -956,6 +949,7 @@ class ModalWait:
                     if self.exit_on_success:
                         if len(self.signal_task_done.slots):
                             logger.warning('WARNING: ModalWait: signal_task_done has active slots, but does not fire when exit_on_success is set')
+                        self.signal_task_dismiss.emit()
                         return False
                 except Exception as e:
                     self._error = e
@@ -1004,7 +998,13 @@ class ModalWait:
                     if imgui.button('Cancel'):
                         self.cancel_signal.emit()
             else:
-                dismiss = self._draw_button()
+                dismiss = False
+                if self._error is None:
+                    dismiss = imgui.button('OK')
+                else:
+                    imgui.push_style_color(imgui.COLOR_BUTTON, 1, 0, 0)
+                    dismiss = imgui.button('DISMISS')
+                    imgui.pop_style_color()
 
                 # Press OK button, or hit escape/enter to dismiss once the task is complete
                 keyboard_state = sdl2.SDL_GetKeyboardState(None)
@@ -1012,6 +1012,7 @@ class ModalWait:
                 if dismiss:
                     imgui.close_current_popup()
                     imgui.end_popup()
+                    self.signal_task_dismiss.emit()
                     return False
 
             if not self.user_resized:
