@@ -706,6 +706,8 @@ class Devkit:
         status_flags = self.steamos_status.get('steam_launch_flags', {})
         if enabled:
             status_flags['PROTON_LOG'] = '1'
+            if self.settings[ProtonLogs.WINEDEBUG_KEY] != '':
+                status_flags['PROTON_LOG'] = self.settings[ProtonLogs.WINEDEBUG_KEY]
         elif 'PROTON_LOG' in status_flags:
             del status_flags['PROTON_LOG']
 
@@ -2692,10 +2694,9 @@ class ProtonLogs(SubTool):
         if enable:
             enable_dict = { 'PROTON_LOG': '1' }
             if self.settings[self.WINEDEBUG_KEY] != '':
-                enable_dict['WINEDEBUG'] = self.settings[self.WINEDEBUG_KEY]
-            else:
-                # delete from wrap if 'default'
-                disable_list = ['WINEDEBUG']
+                enable_dict['PROTON_LOG'] = self.settings[self.WINEDEBUG_KEY]
+            # Force this off from previous releases - we can stop doing this eventually
+            disable_list = ['WINEDEBUG',]
         else:
             disable_list = ['PROTON_LOG', 'WINEDEBUG']
         switch_future = self.devkit_commands.config_steam_wrapper_flags(
