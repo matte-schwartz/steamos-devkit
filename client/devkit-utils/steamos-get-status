@@ -78,12 +78,43 @@ def cef_debugging():
     ret = subprocess.run('/usr/bin/ss -l -t -n -p | grep steamwebhelper | grep 8080 > /dev/null', shell=True)
     return ( ret.returncode == 0 )
 
+def steam_process_get_path_and_args():
+    ret = subprocess.run(['pgrep', '-a', '-x', 'steam'], capture_output=True, text=True)
+    if ret.returncode != 0:
+        return None
+    # Proton may run a dummy 'steam' process that confused previous implementations of this logic
+    # look for a process who's real filename is 'steam'
+    for l in ret.stdout.splitlines():
+        try:
+            pid = int(l.split(' ')[0])
+        except:
+            continue
+        rp = os.path.realpath(f'/proc/{pid}/exe')
+        if os.path.basename(rp) == 'steam':
+            sp = shlex.split(l)
+            path = sp[1]
+            args = sp[2:]
+            return (path, args)
+
+def steam_process_get_path():
+    try:
+        (path, _) = steam_process_get_path_and_args()
+    except:
+        return None
+    return path
+
+def steam_process_get_args():
+    try:
+        (_, args) = steam_process_get_path_and_args()
+    except:
+        return None
+    return args
+
 def steam_status():
     '''What is the status of the Steam client on the system?'''
-    ret = subprocess.run(['pgrep', '-a', '-x', 'steam'], capture_output=True, text=True)
-    if ret.returncode == 1:
+    s = steam_process_get_path()
+    if s is None:
         return SteamStatus.NOT_RUNNING
-    s = ret.stdout.strip('\n')
     if s.find('.local/share/Steam/') != -1:
         if os.path.exists(
             os.path.expanduser('~/devkit-game/devkit-steam')
@@ -96,15 +127,8 @@ def steam_status():
     if s.find('devkit-game/steam-vscode/') != -1:
         # not sure this custom VSCode upload path is still valid
         return SteamStatus.VSCODE
-    logger.warning(f'could not interpret pgrep result to determine steam client status: {ret!r}')
+    logger.warning(f'could not interpret pgrep result to determine steam client status: {s!r}')
     return SteamStatus.ERROR
-
-def steam_current_args():
-    '''What are the Steam client's arguments?'''
-    ret = subprocess.run(['pgrep', '-a', '-x', 'steam'], capture_output=True, text=True)
-    if ret.returncode == 1:
-        return None
-    return shlex.split(ret.stdout.split('\n')[0])[2:]
 
 def steam_configuration():
     '''How is the Steam client configured to run?'''
@@ -339,7 +363,7 @@ if __name__ == '__main__':
             'steam_osclient_version': osclient_version,
             'has_side_loaded_client': has_side_loaded_client,
             'steam_default_args': steam_default_args(),
-            'steam_current_args': steam_current_args(), # None, or a list
+            'steam_current_args': steam_process_get_args(), # None, or a list
             'has_foxnet_connectivity': has_foxnet_connectivity,
             'foxnet_hostname': foxnet_hostname,
             'user_password_is_set': _user_password_is_set,
@@ -351,7 +375,7 @@ if __name__ == '__main__':
         logger.info(f'OS version             : {os_version}')
         logger.info(f'Session mode is        : {session_status}')
         logger.info(f'Steam client status    : {steam_status_description}')
-        logger.info(f'Steam client args      : {steam_current_args()!r}')
+        logger.info(f'Steam client args      : {steam_process_get_args()!r}')
         logger.info(f"Steam CEF debug        : {'enabled' if cef_debugging_enabled else 'disabled'}")
         logger.info(f'Steam client config    : {steam_configuration.description}')
         logger.info(f'Steam OS client branch : {osclient_branch}')
