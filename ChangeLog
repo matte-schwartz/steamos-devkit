@@ -1,3 +1,9 @@
+2023-04-11 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20230411.0
+	* Fix an edge case bug when checking the status of the running Steam client on device.
+	* Improve Proton logging feature, the way the tool sets the WINEDEBUG flags yields more useful logs now.
+
 2023-01-13 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20230113.0
