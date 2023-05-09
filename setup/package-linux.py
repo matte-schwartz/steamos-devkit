@@ -17,7 +17,26 @@ SETUP_DIR = os.path.abspath(os.path.dirname(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 CLIENT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../client'))
 
+
+# don't let python buffering get in the way or readable output
+# https://stackoverflow.com/questions/107705/disable-output-buffering
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+
+
 if __name__ == '__main__':
+    sys.stdout = Unbuffered(sys.stdout)
+    sys.stderr = Unbuffered(sys.stderr)
+
     parser = argparse.ArgumentParser(description='Prepare a shiv package of the devkit client for Linux')
     parser.add_argument('--output-directory', required=False, action='store', default='.', help='Output directory')
     conf = parser.parse_args()

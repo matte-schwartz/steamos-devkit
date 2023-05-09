@@ -1,15 +1,16 @@
 PySDL2
 PyOpenGL
-signalslot
+# >= 0.2.0 required for python 3.11 (not yet on pypi): see https://github.com/Numergy/signalslot/issues/19
+git+https://github.com/Numergy/signalslot#egg=signalslot
 ifaddr
 appdirs
 bcrypt
 cffi
 cryptography
-cx-Freeze == 6.13; sys_platform == 'win32'
+cx-Freeze; sys_platform == 'win32'
 pywin32; sys_platform == 'win32'
 shiv; sys_platform == 'linux'
-# used by the packaging script on linux
+# packaging script on linux expects pipenv
 pipenv; sys_platform == 'linux'
 idna
 netifaces
@@ -17,4 +18,4 @@ paramiko
 pycparser
 PyNaCl
 six
-# imgui: not listed here, install the matching version from pyimgui-wheels/
+imgui[sdl2]

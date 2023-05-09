@@ -36,6 +36,8 @@ module_map = {
     'PySDL2': 'sdl2',
     'PyOpenGL': 'OpenGL',
     'PyNaCl': 'nacl',
+    'imgui[sdl2]': 'imgui',
+    'git+https://github.com/Numergy/signalslot#egg=signalslot': 'signalslot',
 }
 
 # explicitly include all top level modules, extracted from requirements.txt
@@ -53,7 +55,6 @@ for req in open('requirements.txt').readlines():
         modules.append(module_map[req])
     else:
         modules.append(req)
-modules.append('imgui')
 
 print(f'modules: {modules!r}')
 

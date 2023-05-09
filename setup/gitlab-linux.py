@@ -14,15 +14,34 @@ ARTIFACTS_DIR = os.path.join(ROOT_DIR, 'artifacts')
 assert sys.platform == 'linux'
 assert sys.prefix == sys.base_prefix    # executed at build VM OS level
 
+
+# don't let python buffering get in the way or readable output
+# https://stackoverflow.com/questions/107705/disable-output-buffering
+class Unbuffered(object):
+   def __init__(self, stream):
+       self.stream = stream
+   def write(self, data):
+       self.stream.write(data)
+       self.stream.flush()
+   def writelines(self, datas):
+       self.stream.writelines(datas)
+       self.stream.flush()
+   def __getattr__(self, attr):
+       return getattr(self.stream, attr)
+
+
 def call(cmd, cwd):
     print(f'BEGIN CMD: {cmd}')
-    output = subprocess.check_output(cmd, cwd=cwd, shell=True, stderr=subprocess.STDOUT, universal_newlines=True)
-    sys.stdout.write(output)
+    subprocess.check_call(cmd, cwd=cwd, shell=True, stderr=subprocess.STDOUT)
     print(f'END CMD: {cmd}')
 
+
 if __name__ == '__main__':
+    sys.stdout = Unbuffered(sys.stdout)
+    sys.stderr = Unbuffered(sys.stderr)
+
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
-    for python_minor in (9, 10):
+    for python_minor in (9, 10, 11):
         build_dir = os.path.abspath(os.path.join(ROOT_DIR, f'../steamos-devkit-py3{python_minor}'))
         interpreter = f'python3.{python_minor}'
         # using pipenv wasn't the best idea for CI, it leaves it's files in ~/.local/share/virtualenvs/,
@@ -45,7 +64,6 @@ if __name__ == '__main__':
         pipenv_cmd = f'{interpreter} -m pipenv --python 3.{python_minor} run'
         call(f'{pipenv_cmd} pip install -r requirements.txt', build_dir)
         pipenv_cmd = f'{interpreter} -m pipenv run'
-        call(f'{pipenv_cmd} pip install pyimgui-wheels/imgui-2.0.0-cp3{python_minor}-cp3{python_minor}-linux_x86_64.whl', build_dir)
         call(f'{pipenv_cmd} {interpreter} ./setup/package-linux.py', build_dir)
         g = glob.glob(f'{build_dir}/devkit-gui*.pyz')
         if len(g) != 1:
