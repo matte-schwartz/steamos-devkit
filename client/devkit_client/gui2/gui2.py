@@ -1076,6 +1076,7 @@ class DevkitsWindow(ToolWindow):
         self.add_by_ip_text = ''
         self.add_by_ip_port = '{}'.format(devkit_client.DEFAULT_DEVKIT_SERVICE_HTTP)
         self.steam_client_args = None
+        self.first_draw = True
         # Hook into status updates to refresh the command line arguments
         self.devkit_commands.signal_steamos_status.connect(self.on_steamos_status)
         # Indicates whether Valve internal services are available
@@ -1203,6 +1204,20 @@ class DevkitsWindow(ToolWindow):
             return
 
         # === draw =========================================================================
+        if self.first_draw:
+            try:
+                devkit_client.locate_external_tools()
+            except Exception as e:
+                failed_future = concurrent.futures.Future()
+                failed_future.set_exception(e)
+                self.modal_wait = ModalWait(
+                    self.viewport,
+                    self.toolbar,
+                    'ERROR',
+                    failed_future
+                )
+            self.first_draw = False
+
         (_, opened) = imgui.begin(self.BUTTON_NAME, True, imgui.WINDOW_NO_COLLAPSE)
         if not opened:
             self.visible = False

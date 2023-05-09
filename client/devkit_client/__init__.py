@@ -248,6 +248,10 @@ def locate_external_tools():
         return g_external_tools
     if sys.platform != 'win32':
         g_external_tools = (None, 'ssh', 'rsync', None)
+        for tool in g_external_tools:
+            if tool is not None:
+                if shutil.which(tool) is None:
+                    raise Exception(f'{tool} not found - please install.')
         return g_external_tools
 
     cygpath = _locate_external_tool('cygpath.exe')
