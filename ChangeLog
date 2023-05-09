@@ -1,3 +1,9 @@
+2023-045-09 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Releave v0.20230509.0
+	* Linux: add support for Python 3.11
+	* Linux: check and show an error if rsync is not installed
+
 2023-04-11 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20230411.0
