@@ -1521,6 +1521,10 @@ def screenshot(args):
             remote_path = out_text.split('\n')[0]
             remote_filename = pathlib.PurePosixPath(remote_path).parts[-1]
 
+            if args.folder is None or len(args.folder) == 0:
+                logger.warning(f'Screenshot folder is not set - forcing to {os.getcwd()}')
+                args.folder = os.getcwd()
+
             if args.filename is None or len(args.filename) == 0:
                 local_path = str(pathlib.Path(args.folder, remote_filename))
             else:
