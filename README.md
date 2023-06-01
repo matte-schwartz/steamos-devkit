@@ -1,7 +1,9 @@
 
 # Windows development: one time system configuration
 
-Install [Chocolatey](https://chocolatey.org) first
+Please adapt these instructions to your setup. The steps outlined here were tested to work.
+
+Install [Chocolatey](https://chocolatey.org)
 
 In an Adminstrator powershell:
 
@@ -9,12 +11,11 @@ Install misc utilities:
 
 - `choco install 7zip`
 
-Install Python 3.10:
+Install Python 3.11:
 
-# These options install into c:\Python310 for all users
-- `choco install python --version 3.10.7 --params "'/qn /norestart ALLUSERS=1 TARGETDIR=c:\Python310'"`
+- `choco install python --version 3.11.3 --params "'/qn /norestart ALLUSERS=1 TARGETDIR=c:\Python311'"`
 
-Python will install to C:\Python30. Restart the shell to pickup it up.
+Python will install to C:\Python31 for all users. Restart the shell to pickup it up.
 
 Run the following:
 
@@ -52,7 +53,7 @@ Install project dependencies:
 
 - `pip install -r requirements.txt`
 
-You are ready for development. The application can be started by running `python .\devkit-gui.py` in the client/ directory.
+You are ready for development. The application can be started by running `python .\client\devkit-gui.py`.
 
 # Windows packaging:
 

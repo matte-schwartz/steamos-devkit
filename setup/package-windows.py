@@ -54,7 +54,7 @@ if __name__ == '__main__':
     print(f'Build the package')
     subprocess.check_call([r'.\Scripts\python.exe', r'.\setup\cxfreeze-windows.py', 'build'], cwd=ROOT_DIR)
 
-    shutil.copytree(os.path.join(BUILD_DIR, 'exe.win-amd64-3.10'), DIST_DIR, dirs_exist_ok=True)
+    shutil.copytree(os.path.join(BUILD_DIR, 'exe.win-amd64-3.11'), DIST_DIR, dirs_exist_ok=True)
 
     for name in ('devkit-msvsmon', 'devkit-utils', 'gpuvis'):
         dir_path = os.path.join(CLIENT_DIR, name)

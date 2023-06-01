@@ -37,12 +37,11 @@ module_map = {
     'PyOpenGL': 'OpenGL',
     'PyNaCl': 'nacl',
     'imgui[sdl2]': 'imgui',
-    'git+https://github.com/Numergy/signalslot#egg=signalslot': 'signalslot',
 }
 
 # explicitly include all top level modules, extracted from requirements.txt
 # it's likely they don't all need to be explicitly listed, but this protects us from missing dependencies a little
-# hand rolled parser is a little fragile, but if you are going to touch requirements.txt you better know what you're doing anyway
+# hand rolled parser is fragile, but if you are going to touch requirements.txt you better know what you're doing anyway
 modules = []
 for req in open('requirements.txt').readlines():
     if req[0] == '#':
@@ -50,7 +49,7 @@ for req in open('requirements.txt').readlines():
     # those platform specific packages are all support packages that do not need to be bundled
     if req.find('sys_platform') != -1:
         continue
-    req = req.strip('\n')
+    req = req.strip('\n').split(' ')[0]
     if req in module_map:
         modules.append(module_map[req])
     else:
