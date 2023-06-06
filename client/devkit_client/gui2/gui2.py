@@ -30,6 +30,8 @@ if platform.system() == 'Windows':
     import winreg
 
 import signalslot
+# silences some warnings about numpy..
+logging.getLogger('OpenGL.plugins').setLevel(logging.ERROR)
 import OpenGL.GL as gl
 import sdl2
 import imgui
