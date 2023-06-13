@@ -1,3 +1,7 @@
+2023-06-13 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v.0.20230613.0
+	* Improve permission management of the devkit ssh key.
 	* Windows: migrate to Python 3.11
 
 2023-04-09 Timothee Besset <ttimo@valvesoftware.com>

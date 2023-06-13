@@ -460,6 +460,40 @@ def get_public_key(key):
     return public_key
 
 
+def _fix_key_permissions(key_path, pubkey_path):
+    if platform.system() == 'Linux':
+        # enforce/fix file permissions
+        os.chmod(key_path, 0o400)
+        os.chmod(pubkey_path, 0o400)
+    else:
+        # fix permissions for private keys the windows way, keep ssh happy
+        # do not rely on get_username here, use the full domain\name of the current user - some systems fail if you just give username
+        # also icacls.exe docs suggest this should work with the SID, but that will fail with "No mapping between account names and security IDs was done."
+        # I really hate everything about this ...
+        username = windows_get_domain_and_name()
+        for cmd in (
+            ['icacls.exe', key_path, '/Reset'],
+            ['icacls.exe', key_path, '/Inheritance:r'],
+            ['icacls.exe', key_path, '/Grant:r', f'{username}:(R)'],
+            # for diagnostics
+            ['icacls.exe', key_path],
+        ):
+            cp = subprocess.run(
+                cmd,
+                stdin=subprocess.DEVNULL,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.STDOUT,
+                creationflags=SUBPROCESS_CREATION_FLAGS,
+                text=True
+            )
+            if cp.returncode == 0:
+                logger.debug(' '.join(cmd))
+                logger.debug(cp.stdout.strip('\n'))
+            else:
+                logger.warning(' '.join(cmd))
+                logger.warning(cp.stdout.strip('\n'))
+
+
 def ensure_devkit_key():
     # this is called from threads and needs to be marshalled due to possible fs and permissions manipulations
     global g_lock
@@ -469,7 +503,12 @@ def ensure_devkit_key():
         pubkey_path = os.path.join(key_folder, 'devkit_rsa.pub')
         try:
             key = paramiko.RSAKey.from_private_key_file(key_path)
-        except FileNotFoundError:
+        except PermissionError as e:
+            logger.warning(e)
+            logger.warning('Fix permissions and try paramiko key load again.')
+            _fix_key_permissions(key_path, pubkey_path)
+            key = paramiko.RSAKey.from_private_key_file(key_path)
+        except FileNotFoundError as e:
             # first time setup
             logger.warning(f'{key_path} not found - generating a new passwordless devkit key')
             os.makedirs(key_folder, exist_ok=True)
@@ -481,37 +520,7 @@ def ensure_devkit_key():
             key.write_private_key_file(key_path)
             o = open(pubkey_path, 'w')
             o.write(get_public_key(key))
-        if platform.system() == 'Linux':
-            # enforce/fix file permissions
-            os.chmod(key_path, 0o400)
-            os.chmod(pubkey_path, 0o400)
-        else:
-            # fix permissions for private keys the windows way, keep ssh happy
-            # do not rely on get_username here, use the full domain\name of the current user - some systems fail if you just give username
-            # also icacls.exe docs suggest this should work with the SID, but that will fail with "No mapping between account names and security IDs was done."
-            # I really hate everything about this ...
-            username = windows_get_domain_and_name()
-            for cmd in (
-                ['icacls.exe', key_path, '/Reset'],
-                ['icacls.exe', key_path, '/Inheritance:r'],
-                ['icacls.exe', key_path, '/Grant:r', f'{username}:(R)'],
-                # for diagnostics
-                ['icacls.exe', key_path],
-            ):
-                cp = subprocess.run(
-                    cmd,
-                    stdin=subprocess.DEVNULL,
-                    stdout=subprocess.PIPE,
-                    stderr=subprocess.STDOUT,
-                    creationflags=SUBPROCESS_CREATION_FLAGS,
-                    text=True
-                )
-                if cp.returncode == 0:
-                    logger.debug(' '.join(cmd))
-                    logger.debug(cp.stdout.strip('\n'))
-                else:
-                    logger.warning(' '.join(cmd))
-                    logger.warning(cp.stdout.strip('\n'))
+        _fix_key_permissions(key_path, pubkey_path)
         return (key, key_path, pubkey_path)
 
 
