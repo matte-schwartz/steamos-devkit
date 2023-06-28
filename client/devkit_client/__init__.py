@@ -1473,6 +1473,20 @@ def rgp_capture(args):
     while attempts > 0:
         time.sleep(.1)
         attempts -= 1
+
+        # Wait for completion by checking the RGP capture size.
+        filesize = 0
+        while True:
+            out_text, err_text, exit_status = _simple_ssh(ssh, 'ls -1ts --block-size=1 /tmp/*.rgp', silent=True)
+            if exit_status != 0:
+                break;
+            new_filesize = out_text.split(' ')[0]
+            if new_filesize == filesize:
+                # RGP capture is complete.
+                break;
+            filesize = new_filesize
+            time.sleep(.1)
+
         out_text, err_text, exit_status = _simple_ssh(ssh, 'ls -1t /tmp/*.rgp', silent=True)
         if exit_status == 0:
             remote_path = out_text.split('\n')[0]
