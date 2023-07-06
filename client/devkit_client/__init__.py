@@ -1469,36 +1469,35 @@ def rgp_capture(args):
 
     _simple_ssh(ssh, 'rm /tmp/*.rgp', silent=True)
     _simple_ssh(ssh, 'touch /tmp/rgp.trigger', silent=True)
-    attempts = 10
-    while attempts > 0:
-        time.sleep(.1)
-        attempts -= 1
 
-        # Wait for completion by checking the RGP capture size.
-        filesize = 0
-        while True:
-            out_text, err_text, exit_status = _simple_ssh(ssh, 'ls -1ts --block-size=1 /tmp/*.rgp', silent=True)
-            if exit_status != 0:
-                break;
-            new_filesize = out_text.split(' ')[0]
-            if new_filesize == filesize:
-                # RGP capture is complete.
-                break;
-            filesize = new_filesize
-            time.sleep(.1)
-
-        out_text, err_text, exit_status = _simple_ssh(ssh, 'ls -1t /tmp/*.rgp', silent=True)
+    remote_filename = None
+    filename_wait = time.time()
+    while time.time() - filename_wait < 2:
+        out_text, _, exit_status = _simple_ssh(ssh, 'ls -1t /tmp/*.rgp', silent=True)
         if exit_status == 0:
-            remote_path = out_text.split('\n')[0]
-            remote_filename = pathlib.PurePosixPath(remote_path).parts[-1]
-            os.makedirs(args.local_folder, exist_ok = True)
-            local_path = os.path.join(args.local_folder, remote_filename)
-            sftp = ssh.open_sftp()
-            sftp.get(remote_path, local_path)
-            logger.info(f'Downloaded to {local_path}')
             break
-    if attempts <= 0:
-        raise Exception('Could not obtain a RGP capture: timeout. Have you enabled RGP capture in the Steam client, are you running a Vulkan title?')
+        time.sleep(.1)
+    if exit_status != 0:
+        raise Exception('Timeout waiting for capture file. Have you enabled RGP capture in the Steam client, are you running a Vulkan title?')
+    remote_path = out_text.split('\n')[0]
+    remote_filename = pathlib.PurePosixPath(remote_path).parts[-1]
+
+    # wait for the full write by checking on the size
+    size = 0
+    while True:
+        out_text, _, _ = _simple_ssh(ssh, f'stat -c %s {remote_path}', silent=True, check_status=True)
+        updated_size = int(out_text)
+        if updated_size != 0 and updated_size == size:
+            break
+        size = updated_size
+        time.sleep(.5)
+
+    # transfer
+    os.makedirs(args.local_folder, exist_ok = True)
+    local_path = os.path.join(args.local_folder, remote_filename)
+    sftp = ssh.open_sftp()
+    sftp.get(remote_path, local_path)
+    logger.info(f'Downloaded to {local_path}')
 
     if args.launch:
         if not os.path.exists(args.rgp_path):
