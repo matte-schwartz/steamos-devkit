@@ -1,3 +1,9 @@
+2023-07-06 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v.0.20230706.0
+	* Tool was downloading truncated RGP traces, fixed (Samuel Pitoiset).
+	* Fix support for latest SteamOS.
+
 2023-06-13 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v.0.20230613.0
