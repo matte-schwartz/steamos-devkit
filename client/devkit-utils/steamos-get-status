@@ -283,7 +283,7 @@ if __name__ == '__main__':
 
     os_info = get_os_info()
     assert os_info is not None
-    steamdeck = os_info.get('VARIANT_ID', None) == 'steamdeck'
+    steamdeck = os_info.get('VARIANT_ID', None).startswith('steamdeck')
     os_name = os_info.get('PRETTY_NAME', None)
     os_version = os_info.get('BUILD_ID', None)
 
