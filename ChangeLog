@@ -1,3 +1,7 @@
+2023-07-12 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Fix the launch script to check for and use python 3.11 if available. Keeping 3.10 and 3.9 as fallbacks for now.
+
 2023-07-06 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v.0.20230706.0
