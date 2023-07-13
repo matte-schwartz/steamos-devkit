@@ -1,16 +1,17 @@
-2023-07-12 Timothee Besset <ttimo@valvesoftware.com>
+2023-07-13 Timothee Besset <ttimo@valvesoftware.com>
 
+	* Release v0.20230713.0
 	* Fix the launch script to check for and use python 3.11 if available. Keeping 3.10 and 3.9 as fallbacks for now.
 
 2023-07-06 Timothee Besset <ttimo@valvesoftware.com>
 
-	* Release v.0.20230706.0
+	* Release v0.20230706.0
 	* Tool was downloading truncated RGP traces, fixed (Samuel Pitoiset).
 	* Fix support for latest SteamOS.
 
 2023-06-13 Timothee Besset <ttimo@valvesoftware.com>
 
-	* Release v.0.20230613.0
+	* Release v0.20230613.0
 	* Improve permission management of the devkit ssh key.
 	* Windows: migrate to Python 3.11.
 	* Screenshot button more resilient to empty input.
