@@ -19,6 +19,7 @@ import platform
 import re
 import enum
 import socket
+import errno
 import webbrowser
 import pathlib
 import shutil
@@ -77,7 +78,8 @@ class DevkitCommands:
     This is very crufty because reasons. Could be massively simplified now.
     '''
 
-    def __init__(self, shutdown_signal):
+    def __init__(self, conf, shutdown_signal):
+        self.conf = conf
         self.executor = None
         self.signal_steamos_status = signalslot.Signal(args = ['devkit'])
         # we have some background threads that should early out when shutting down
@@ -363,20 +365,24 @@ class DevkitCommands:
         return self.executor.submit(self._screenshot, *args)
 
     def _check_port(self, host, port):
+        logger.debug(f'Checking if {host}:{port} is open.')
+        s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        s.settimeout(int(self.conf.check_port_timeout))
+        start = time.time()
         try:
-            logger.debug(f'Checking if {host}:{port} is open.')
-            s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-            s.settimeout(1)
             ret = s.connect_ex((host, port))
         except Exception as e:
             devkit_client.log_exception(e)
             logger.warning(f'Port {port} on host {host} is unreachable.')
             return False
         if ret != 0:
-            logger.error(f'socket.connect_ex errno: {ret}')
+            # NOTE: despite what the python documentation suggests, I am not observing a TimeoutError exception but instead getting EAGAIN here in case of timeout
+            logger.error(f'socket.connect_ex errno: {ret} {errno.errorcode[ret]} {os.strerror(ret)}')
             logger.warning(f'Port {port} on host {host} is unreachable.')
             return False
-        logger.info(f'Port {port} on host {host} is open.')
+        replied = time.time()
+        latency_ms = int( ( replied - start ) * 1000 )
+        logger.info(f'Port {port} on host {host} is open - latency {latency_ms} ms')
         return True
 
     def _check_connectivity(self, devkit):
@@ -3300,6 +3306,11 @@ def main():
         '--valve', required=False, action='store_true',
         help='Force Valve mode features (default: auto detect)'
     )
+    parser.add_argument(
+        '--check-port-timeout', required=False, action='store',
+        default=4,
+        help='Timeout when checking open ports (default 4) - may need to be bumped up on very slow networks'
+    )
 
     conf = parser.parse_args()
 
@@ -3330,7 +3341,7 @@ def main():
     shutdown_signal.connect(settings.on_shutdown_signal)
     atexit.register(settings.shutdown) # saves settings on abnormal termination
 
-    devkit_commands = DevkitCommands(shutdown_signal)
+    devkit_commands = DevkitCommands(conf, shutdown_signal)
     devkit_commands.setup()
 
     viewport = ImGui_SDL2_Viewport(1280, 720, "Steam Devkit Management Tool")
