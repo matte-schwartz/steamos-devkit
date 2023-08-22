@@ -2751,7 +2751,7 @@ class ProtonLogs(SubTool):
 
         imgui.same_line()
         imgui.set_cursor_pos_x(86*CHARACTER_WIDTH)
-        imgui.text('WINEDEBUG:')
+        imgui.text('PROTON_LOG:')
         imgui.same_line()
         imgui.set_next_item_width(26*CHARACTER_WIDTH)
         changed, s = imgui.input_text('##proton_log_winedebug', self.settings[self.WINEDEBUG_KEY], 128)
