@@ -1332,8 +1332,9 @@ Start-Sleep -Seconds 3
             ['gnome-terminal', '--'],
             ['xterm', '-e'],
         ):
-            if shutil.which(terminal_prefix[0]) is not None:
-                commands = terminal_prefix + commands
+            shell_path = shutil.which(terminal_prefix[0])
+            if shell_path is not None:
+                commands = [ shell_path, ] + terminal_prefix[1:] + commands
                 logger.info(f'Open terminal: {commands!r}')
                 matched = True
                 break
