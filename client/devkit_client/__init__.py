@@ -60,6 +60,7 @@ import appdirs
 
 import paramiko
 import devkit_client.zeroconf as zeroconf
+import devkit_client.captured_popen as captured_popen
 
 try:
     import devkit_client.version
@@ -120,6 +121,7 @@ g_remote_debuggers = None
 g_external_tools = None
 g_lock = threading.Lock()
 
+g_captured_popen_factory = captured_popen.CapturedPopenFactory()
 
 # This burned me twice now .. https://twitter.com/TTimo/status/1582509449838989313
 from os import getenv as os_getenv
@@ -1325,26 +1327,35 @@ Start-Sleep -Seconds 3
             commands = [powershell_path, '-ExecutionPolicy', 'Bypass', batch.name]
         # ensures we get a separate console when running out of a shell with pipenv
         creationflags=subprocess.CREATE_NEW_CONSOLE
-    else:
-        matched = False
-        for terminal_prefix in (
-            ['konsole', '-e'],
-            ['gnome-terminal', '--'],
-            ['xterm', '-e'],
-        ):
-            shell_path = shutil.which(terminal_prefix[0])
-            if shell_path is not None:
-                commands = [ shell_path, ] + terminal_prefix[1:] + commands
-                logger.info(f'Open terminal: {commands!r}')
-                matched = True
-                break
-        if not matched:
-            raise Exception('Could not find a suitable terminal to run command!')
+        # we cannot use captured output here, we'd actually capture the shell stdout and break the terminal
+        logger.info(f'Run in terminal, cwd {cwd!r}: {" ".join(commands)}')
+        p = subprocess.Popen(
+            commands,
+            cwd=cwd,
+            creationflags=creationflags,
+        )
+        return p
+
+    # Linux
+    matched = False
+    for terminal_prefix in (
+        ['konsole', '-e'],
+        ['gnome-terminal', '--'],
+        ['xterm', '-e'],
+    ):
+        shell_path = shutil.which(terminal_prefix[0])
+        if shell_path is not None:
+            commands = [ shell_path, ] + terminal_prefix[1:] + commands
+            logger.info(f'Open terminal: {commands!r}')
+            matched = True
+            break
+    if not matched:
+        raise Exception('Could not find a suitable terminal to run command!')
     logger.info(f'Run in terminal, cwd {cwd!r}: {" ".join(commands)}')
-    p = subprocess.Popen(
+    p = g_captured_popen_factory.Popen(
         commands,
-        creationflags=creationflags,
-        cwd=cwd,
+        cwd,
+        creationflags
     )
     return p
 
@@ -1462,7 +1473,7 @@ def gpu_trace(args):
             raise Exception(f'Invalid GPU Vis path - does not exist: {args.gpuvis_path}')
         gpuvis_cmd = [args.gpuvis_path, local_trace_file]
         logger.info(' '.join(gpuvis_cmd))
-        subprocess.Popen(gpuvis_cmd)
+        g_captured_popen_factory.Popen(gpuvis_cmd)
 
 
 def rgp_capture(args):
@@ -1504,7 +1515,7 @@ def rgp_capture(args):
         if not os.path.exists(args.rgp_path):
             raise Exception(f'Invalid Radeon GPU Profiler path - does not exist: {args.rgp_path}')
         profiler_cmd = [args.rgp_path, local_path]
-        subprocess.Popen(profiler_cmd)
+        g_captured_popen_factory.Popen(profiler_cmd)
 
 
 def config_steam_wrapper_flags(devkit, enable, disable):

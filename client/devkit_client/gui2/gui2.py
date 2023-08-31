@@ -529,7 +529,7 @@ class DevkitCommands:
         if filezilla is None or not os.path.exists(filezilla):
             raise Exception('FileZilla not found. Please install in order to use this feature.')
         cmd = [filezilla, '-l', 'ask', f'sftp://{devkit.machine.login}@{devkit.machine.address}']
-        subprocess.Popen(cmd)
+        devkit_client.g_captured_popen_factory.Popen(cmd)
 
     def browse_files(self, *args):
         return self.executor.submit(self._browse_files, *args)
@@ -2691,7 +2691,7 @@ class RenderDocCapture(SubTool):
             #       additionally, remoteaccess just doesn't work.
             rdoc_cmd = [self.settings[self.RDOC_KEY]] #, "--remoteaccess", machine.address, "--replayhost", machine.address]
             logger.info(' '.join(rdoc_cmd))
-            subprocess.Popen(rdoc_cmd)
+            devkit_client.g_captured_popen_factory.Popen(rdoc_cmd)
 
 class ProtonLogs(SubTool):
     BUTTON_NAME = 'Sync Proton Logs'
@@ -3296,20 +3296,24 @@ def main():
     parser.add_argument(
         '--verbose', required=False, action='store',
         default='INFO', const='DEBUG', nargs='?',
-        help='Logging verbosity'
+        help='Set logging verbosity.'
     )
     parser.add_argument(
         '--logfile', required=False, action='store',
-        help='Log to file'
+        help='Log to a file.'
     )
     parser.add_argument(
         '--valve', required=False, action='store_true',
-        help='Force Valve mode features (default: auto detect)'
+        help='Force Valve mode features (default: auto detect).'
     )
     parser.add_argument(
         '--check-port-timeout', required=False, action='store',
         default=4,
-        help='Timeout when checking open ports (default 4) - may need to be bumped up on very slow networks'
+        help='Timeout when checking open ports (default 4) - may need to be bumped up on very slow networks.'
+    )
+    parser.add_argument(
+        '--disable-popen-capture', required=False, action='store_true',
+        help='Disable capturing of launched external processes output to the status window.'
     )
 
     conf = parser.parse_args()
@@ -3336,6 +3340,10 @@ def main():
     devkit_client.proxy.disable_proxy()
 
     shutdown_signal = signalslot.Signal()
+
+    if conf.disable_popen_capture:
+        devkit_client.g_captured_popen_factory.enabled = False
+    devkit_client.g_captured_popen_factory.set_shutdown_signal( shutdown_signal )
 
     settings = Settings()
     shutdown_signal.connect(settings.on_shutdown_signal)
