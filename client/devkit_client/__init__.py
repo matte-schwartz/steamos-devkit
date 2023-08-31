@@ -61,6 +61,7 @@ import appdirs
 import paramiko
 import devkit_client.zeroconf as zeroconf
 import devkit_client.captured_popen as captured_popen
+import devkit_client.custom_terminal as custom_terminal
 
 try:
     import devkit_client.version
@@ -122,6 +123,7 @@ g_external_tools = None
 g_lock = threading.Lock()
 
 g_captured_popen_factory = captured_popen.CapturedPopenFactory()
+g_custom_terminal = custom_terminal.CustomTerminal()
 
 # This burned me twice now .. https://twitter.com/TTimo/status/1582509449838989313
 from os import getenv as os_getenv
@@ -1286,6 +1288,10 @@ def run_in_terminal(commands):
     cwd = os.getcwd()
     creationflags=0
     if platform.system() == 'Windows':
+        p = g_custom_terminal.Popen(commands)
+        if p is not None:
+            return p
+
         # After a bunch of iteration, writing a ps1 script and running it from the ssh.exe directory seems the most reliable
         # trying to pass all command line parameters with a direct powershell.exe invocation runs into a nightmare of path escaping business
         # this also enables us to provide better error handling and diagnostics

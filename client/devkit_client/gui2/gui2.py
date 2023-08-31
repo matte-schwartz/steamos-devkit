@@ -3315,6 +3315,15 @@ def main():
         '--disable-popen-capture', required=False, action='store_true',
         help='Disable capturing of launched external processes output to the status window.'
     )
+    if platform.system() == 'Windows':
+        parser.add_argument(
+            '--with-conemu', required=False, action='store',
+            help='Configure run in terminal to use given exe with conemu syntax. Set to blank to clear.'
+        )
+        parser.add_argument(
+            '--with-cmder', required=False, action='store',
+            help='Configure run in terminal to use given exe with cmder syntax. Set to blank to clear.'
+        )
 
     conf = parser.parse_args()
 
@@ -3348,6 +3357,8 @@ def main():
     settings = Settings()
     shutdown_signal.connect(settings.on_shutdown_signal)
     atexit.register(settings.shutdown) # saves settings on abnormal termination
+
+    devkit_client.g_custom_terminal.setup(conf, settings)
 
     devkit_commands = DevkitCommands(conf, shutdown_signal)
     devkit_commands.setup()
