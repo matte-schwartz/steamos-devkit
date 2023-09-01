@@ -1,3 +1,19 @@
+2023-09-01 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20230901.0
+	* Several cleanups and refactoring to the mDNS logic for device discovery. Faster queries with caching,
+	  possible fix for some rarely observed issues with inconsistent or incomplete mDNS info.
+	* Add support for ConEmu and Cmder on Windows:
+	  use --with-conemu or --with-cmder to point at the respective ConEmu or Cmder binary you which to use
+	  will then be picked up by "run in terminal" commands (e.g. remote shell to a device)
+	  the setting is persistent, set to blank with --with-conemu="" to go back to your configured default Windows Terminal
+	* Various improvements to the tool's ability to run external processes:
+	  - Capturing the output from "run in terminal" on linux into the status window to improve diagnostics.
+	  - Capturing the output from third party tools (gpuvis, renderdoc etc.) on all platforms.
+	  - New --disable-popen-capture command line to disable the above behavior.
+	* Escaping the LDLP scout runtime if necessary to run at host level. Fixes a problem where "run in terminal" would silently fail on Linux.
+	* Raise port open/close check timeouts from 1 second to 4, to accomodate for slow wifi networks
+
 2023-07-13 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20230713.0
