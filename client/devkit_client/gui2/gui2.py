@@ -1093,7 +1093,7 @@ class DevkitsWindow(ToolWindow):
     def setup(self):
         super(DevkitsWindow, self).setup()
         self.zc = zeroconf.Zeroconf()
-        self.zc_listener = devkit_client.ServiceListener(quiet=False)
+        self.zc_listener = devkit_client.ServiceListener(self.zc, quiet=False)
         zeroconf.ServiceBrowser(
             self.zc,
             devkit_client.STEAM_DEVKIT_TYPE,

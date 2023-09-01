@@ -369,17 +369,12 @@ class MachineNameType(enum.Enum):
         return '<{}.{}>'.format(self.__class__.__name__, self.name)
 
 
-class ServiceListener(object):
-    def __init__(self, quiet=False):
-        self.r = zeroconf.Zeroconf()
+class ServiceListener:
+    def __init__(self, zc, quiet=False):
+        self.zc = zc
         self.devkits = {}
         self.devkit_events = queue.Queue()
         self.quiet = quiet
-
-    def __del__(self):
-        if self.r is not None:
-            self.r.close()
-            self.r = None
 
     def remove_service(self, zeroconf, type, name):
         # Called from the zeroconf thread
@@ -402,7 +397,7 @@ class ServiceListener(object):
         if (not self.quiet):
             logger.info("Service %r found", service_name)
         get_service_delay = time.perf_counter()
-        info = self.r.get_service_info(type, name, timeout=ZEROCONF_TIMEOUT)
+        info = self.zc.get_service_info(type, name, timeout=ZEROCONF_TIMEOUT)
         get_service_delay = time.perf_counter() - get_service_delay
         if not self.quiet:
             logger.debug(f'zeroconf.get_service_info delay: {get_service_delay:.1f}')
