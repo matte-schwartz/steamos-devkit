@@ -372,11 +372,10 @@ class MachineNameType(enum.Enum):
 
 
 class ServiceListener:
-    def __init__(self, zc, quiet=False):
+    def __init__(self, zc):
         self.zc = zc
         self.devkits = {}
         self.devkit_events = queue.Queue()
-        self.quiet = quiet
         # singleton
         global g_zeroconf_listener
         assert g_zeroconf_listener is None
@@ -387,8 +386,7 @@ class ServiceListener:
         assert type == STEAM_DEVKIT_TYPE, (name, type)
         assert name.endswith('.' + type), (name, type)
         service_name = name[:-len('.' + type)]
-        if (not self.quiet):
-            logger.info("Service %r removed", service_name)
+        logger.info("Service %r removed", service_name)
         if not service_name in self.devkits:
             logger.warning("Service %r not found", service_name)
             return
@@ -400,28 +398,24 @@ class ServiceListener:
         assert type == STEAM_DEVKIT_TYPE, (name, type)
         assert name.endswith('.' + type), (name, type)
         service_name = name[:-len('.' + type)]
-        if (not self.quiet):
-            logger.info("Service %r found", service_name)
-        get_service_delay = time.perf_counter()
+        logger.info("Service %r found", service_name)
+        get_service_delay = time.perf_counter_ns()
         info = self.zc.get_service_info(type, name, timeout=ZEROCONF_TIMEOUT)
-        get_service_delay = time.perf_counter() - get_service_delay
-        if not self.quiet:
-            logger.debug(f'zeroconf.get_service_info delay: {get_service_delay:.1f}')
+        get_service_delay = time.perf_counter_ns() - get_service_delay
+        logger.debug(f'zeroconf.get_service_info: {int(get_service_delay/1000)}ms')
         if info:
-            if not self.quiet:
-                logger.info(
-                    "  Address is %s:%d",
-                    socket.inet_ntoa(info.addresses[0]), info.port)
-                logger.info(
-                    "  Weight is %d, Priority is %d",
-                    info.weight, info.priority)
-                logger.info("  Server is %s", info.server)
+            logger.info(
+                "  Address is %s:%d",
+                socket.inet_ntoa(info.addresses[0]), info.port)
+            logger.debug(
+                "  Weight is %d, Priority is %d",
+                info.weight, info.priority)
+            logger.debug("  Server is %s", info.server)
             prop = info.properties
             if prop:
-                if not self.quiet:
-                    logger.info("  Properties are:")
-                    for key, value in prop.items():
-                        logger.info("    %s: %s", key, value)
+                logger.debug("  Properties are:")
+                for key, value in prop.items():
+                    logger.debug("    %s: %s", key, value)
                 if b'txtvers' in prop and prop[b'txtvers'] != CURRENT_TXTVERS:
                     logger.warning(
                         'Incompatible txtvers %r, ignoring %s',
