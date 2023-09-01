@@ -125,6 +125,8 @@ g_lock = threading.Lock()
 g_captured_popen_factory = captured_popen.CapturedPopenFactory()
 g_custom_terminal = custom_terminal.CustomTerminal()
 
+g_zeroconf_listener = None
+
 # This burned me twice now .. https://twitter.com/TTimo/status/1582509449838989313
 from os import getenv as os_getenv
 def getenv_monkey(key, default=None):
@@ -375,6 +377,10 @@ class ServiceListener:
         self.devkits = {}
         self.devkit_events = queue.Queue()
         self.quiet = quiet
+        # singleton
+        global g_zeroconf_listener
+        assert g_zeroconf_listener is None
+        g_zeroconf_listener = self
 
     def remove_service(self, zeroconf, type, name):
         # Called from the zeroconf thread
@@ -444,6 +450,57 @@ class ServiceListener:
 
     def update_service(self, *args):
         self.add_service(*args)
+
+    # unrelated to the rest of ServiceListener, we just fill in service info into a Machine instance
+    # either use cached data, or query as needed, but rely on the same zeroconf context as the listening service for consistency
+    def update_service_info(self, machine):
+        instance_name = machine.name + '.' + STEAM_DEVKIT_TYPE
+        info = None
+        if machine.name in self.devkits:
+            info = self.devkits[machine.name]
+            logger.debug(f'zeroconf service info for {machine.name} is in cache.')
+        else:
+            get_service_delay = time.perf_counter()
+            logger.debug(f'query zeroconf for DNS-SD instance {instance_name}')
+            info = self.zc.get_service_info(STEAM_DEVKIT_TYPE, instance_name, timeout=ZEROCONF_TIMEOUT)
+            get_service_delay = time.perf_counter() - get_service_delay
+            logger.debug(f'zeroconf.get_service_info: {get_service_delay:.1f}s')
+
+        if info is None:
+            raise MachineNotFoundError(
+                f'mDNS devkit service {machine.name} not found',
+                name=machine.name
+            )
+
+        logger.debug("Machine found")
+        if len(info.addresses) <= 0:
+            raise MachineNotFoundError(
+                f'DNS-SD instance {machine.name} did not publish an IP address yet. {info!r}',
+                name=machine.name
+            )
+        machine.address = socket.inet_ntoa(info.addresses[0])
+        logger.info("Machine IP: %s", machine.address)
+
+        if info.properties:
+            settings = info.properties.get(b'settings')
+            if settings is not None:
+                machine.settings = json.loads(settings)
+
+            if machine.login is None:
+                login = info.properties.get(b'login')
+                if login is not None:
+                    machine.login = login.decode('utf-8')
+                    logger.debug("Machine login: %s", machine.login)
+
+                devkit1 = info.properties.get(b'devkit1')
+                if devkit1 is not None:
+                    machine.devkit1 = shlex.split(devkit1.decode('utf-8'))
+                    logger.debug("devkit-1 entry point: %s", machine.devkit1)
+
+        # mDNS is ASCII-case-insensitive, like normal DNS, and defines
+        # UTF-8 to be fully composed.
+        machine.normalized_name = unicodedata.normalize(
+            'NFC', machine.name.translate(ASCII_LOWERCASE).rstrip('.'))
 
 
 def get_public_key_comment():
@@ -771,15 +828,6 @@ class Machine:
         return self._http_port
 
 
-@contextlib.contextmanager
-def zeroconf_context():
-    zc = zeroconf.Zeroconf()
-    try:
-        yield zc
-    finally:
-        zc.close()
-
-
 def resolve_machine(name, devkit1=(), login=None, need_login=True,
                     need_devkit1=True, name_type=MachineNameType.GUESS,
                     http_port=DEFAULT_DEVKIT_SERVICE_HTTP):
@@ -798,51 +846,16 @@ def resolve_machine(name, devkit1=(), login=None, need_login=True,
             name = name[:-len('.' + STEAMOS_DEVKIT_SERVICE)]
 
         machine.name = name
-        instance_name = name + '.' + STEAM_DEVKIT_TYPE
 
         logger.info("Looking for machine with service name: %s", machine.name)
-        logger.debug("DNS-SD instance name: %s", instance_name)
 
-        with zeroconf_context() as zc:
-            get_service_delay = time.perf_counter()
-            info = zc.get_service_info(STEAM_DEVKIT_TYPE, instance_name, timeout=ZEROCONF_TIMEOUT)
-            get_service_delay = time.perf_counter() - get_service_delay
-            logger.debug(f'zeroconf.get_service_info: {get_service_delay:.1f}')
+        global g_zeroconf_listener
+        if g_zeroconf_listener is None:
+            raise MachineNotFoundError(
+                'Zeroconf service is not configured yet.'
+            )
 
-            if info:
-                logger.debug("Machine found")
-                if len(info.addresses) <= 0:
-                    raise MachineNotFoundError(
-                        'DNS-SD instance did not publish an IP address yet: {!r}'.format(instance_name),
-                        name=machine.name
-                    )
-                machine.address = socket.inet_ntoa(info.addresses[0])
-                logger.info("Machine IP: %s", machine.address)
-
-                if info.properties:
-                    settings = info.properties.get(b'settings')
-                    if settings is not None:
-                        machine.settings = json.loads(settings)
-
-                    if machine.login is None:
-                        login = info.properties.get(b'login')
-                        if login is not None:
-                            machine.login = login.decode('utf-8')
-                            logger.debug("Machine login: %s", machine.login)
-
-                        devkit1 = info.properties.get(b'devkit1')
-                        if devkit1 is not None:
-                            machine.devkit1 = shlex.split(devkit1.decode('utf-8'))
-                            logger.debug("devkit-1 entry point: %s", machine.devkit1)
-            else:
-                raise MachineNotFoundError(
-                    'Unable to find a devkit named "{}"'.format(machine.name),
-                    name=machine.name)
-
-            # mDNS is ASCII-case-insensitive, like normal DNS, and defines
-            # UTF-8 to be fully composed.
-            machine.normalized_name = unicodedata.normalize(
-                'NFC', machine.name.translate(ASCII_LOWERCASE).rstrip('.'))
+        g_zeroconf_listener.update_service_info(machine)
 
     elif name_type is MachineNameType.ADDRESS:
         # name is (assumed to be) a resolvable DNS hostname.
