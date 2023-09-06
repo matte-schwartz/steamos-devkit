@@ -18,6 +18,11 @@ class CustomTerminal:
         self.conf = conf
         self.settings = settings
 
+        # ensure default values
+        if self.settings.get(self.STYLE_KEY, None) is None:
+            self.settings[self.STYLE_KEY] = 0
+            self.settings[self.TERM_KEY] = None
+
         matched = False
         for (term_attr, style) in (('with_conemu', 1), ('with_cmder', 2)):
             term = vars(self.conf).get(term_attr)
