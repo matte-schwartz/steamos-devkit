@@ -2051,6 +2051,7 @@ class UpdateTitle(ToolWindow):
         imgui.next_column()
         if clicked:
             self.auto_upload = v
+            save_config = True
 
         imgui.columns(1)
 
