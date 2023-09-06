@@ -1,3 +1,9 @@
+2023-09-06 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20230906.1
+	* fix 'Auto upload upon build success' not working (out of sync setting)
+	* initialize the new custom windows terminal settings, fixes 'CustomTerminal.Style' error on windows
+
 2023-09-01 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20230901.0
