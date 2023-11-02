@@ -5,28 +5,28 @@ Please adapt these instructions to your setup. The steps outlined here were test
 
 Install [Chocolatey](https://chocolatey.org)
 
-In an Adminstrator powershell:
+In an Administrator command prompt:
 
 Install misc utilities:
 
 - `choco install 7zip`
 
-Install Python 3.11:
+Install Python 3.12:
 
-- `choco install python --version 3.11.3 --params "'/qn /norestart ALLUSERS=1 TARGETDIR=c:\Python311'"`
+- `choco install python --version 3.12.0 --params "'/qn /norestart ALLUSERS=1 TARGETDIR=c:\Python312'"`
 
-Python will install to C:\Python31 for all users. Restart the shell to pickup it up.
+Python will install to C:\Python312 for all users.
 
-Run the following:
+Restart the Administrator command prompt to pick up the new python and run the following:
 
 - `python -m pip install --upgrade pip`
 - `python -m pip install --upgrade setuptools`
 
 Install the Microsoft Visual C++ compiler, per https://wiki.python.org/moin/WindowsCompilers:
 
-- `choco install visualstudio2019community`
+- `choco install visualstudio2022community`
 
-Then run 'Visual Studio Installer' from the Start menu, and enable the 'Python development' workload, plus the 'Python native development tools' option.
+Then run 'Visual Studio Installer' from the Start menu, and enable the 'Python development' workload, plus the 'Python native development tools' option. See [the pyhon wiki](https://wiki.python.org/moin/WindowsCompilers#Microsoft_Visual_C.2B-.2B-_14.x_with_Visual_Studio_2022_.28x86.2C_x64.2C_ARM.2C_ARM64.29) for more details.
 
 Install cygwin with needed packages:
 
@@ -35,12 +35,12 @@ Install cygwin with needed packages:
 
 # Windows development: python virtualenv setup
 
-Next, prepare a python virtualenv with all the necessary dependencies. This step can be repeated in fresh clones of the repositories.
+Next, prepare a python virtualenv with all the necessary dependencies. This step needs to be repeated in every fresh clone of the repository.
 
-From your checkout of steamos-devkit:
+Open a Visual Studio Developer command prompt in the steamos-devkit folder and run the following:
 
 - setup: `python -m venv .`
-- activate: `.\Scripts\Activate.ps1`
+- activate: `.\Scripts\activate.bat`
 
     If you get an `UnauthorizedAccess` error due to [execution policies](https://docs.microsoft.com/en-us/powershell/module/microsoft.powershell.core/about/about_execution_policies), run the following command first: `Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope Process`
 
