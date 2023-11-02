@@ -55,6 +55,7 @@ import tempfile
 import pathlib
 import re
 import threading
+import winreg
 
 import appdirs
 
@@ -236,15 +237,26 @@ def _locate_external_tool(name):
         assert os.path.exists(ret)
         return ret
     # Running from source:
-    # Locate a cygwin version. That's what we package. Windows ssh.exe isn't a compatible transport for rsync for instance
-    # NOTE: we could do better at locating the cygwin install
+    # Locate cygwin. That's what we package. Windows ssh.exe isn't a compatible transport for rsync for instance
+    # This is the installation we recommend in the readme, since there can be multiple cygwin installs it's best to check first
     ret = os.path.join(r'C:\cygwin64\bin', name)
     if os.path.exists(ret):
         return ret
-    # Last ditch attempt, look for the first thing in PATH
+    # Look for the first thing in PATH, that would be the 'preferred' cygwin install if that's setup
     ret = shutil.which(name)
     if ret is not None:
         return ret
+    # Go poke at the registry then
+    CYGWIN_KEY = "SOFTWARE\\Cygwin\\setup"
+    for hk in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
+        try:
+            key = winreg.OpenKey(hk, CYGWIN_KEY)
+        except FileNotFoundError as e:
+            continue
+        root = winreg.QueryValueEx(key, "rootdir")[0]
+        ret = os.path.join(root, 'bin', name)
+        if os.path.exists(ret):
+            return ret
     raise Exception('Required external tool not found: {!r}'.format(name))
 
 def locate_external_tools():
