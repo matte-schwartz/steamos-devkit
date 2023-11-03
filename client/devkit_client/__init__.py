@@ -242,10 +242,13 @@ def _locate_external_tool(name):
     ret = os.path.join(r'C:\cygwin64\bin', name)
     if os.path.exists(ret):
         return ret
-    # Look for the first thing in PATH, that would be the 'preferred' cygwin install if that's setup
-    ret = shutil.which(name)
+    # Look for cygpath.exe in system PATH, that would be the 'preferred' cygwin install if that's setup
+    # (don't look for 'name' e.g. ssh.exe lest you find Windows SSH which is not what we're looking for here)
+    ret = shutil.which('cygpath.exe')
     if ret is not None:
-        return ret
+        ret = os.path.join(os.path.dirname(ret), name)
+        if os.path.exists(ret):
+            return ret
     # Go poke at the registry then
     CYGWIN_KEY = "SOFTWARE\\Cygwin\\setup"
     for hk in (winreg.HKEY_LOCAL_MACHINE, winreg.HKEY_CURRENT_USER):
