@@ -1214,7 +1214,7 @@ class DevkitsWindow(ToolWindow):
         # === draw =========================================================================
         if self.first_draw:
             try:
-                devkit_client.locate_external_tools()
+                devkit_client.locate_cygwin_tools()
             except Exception as e:
                 failed_future = concurrent.futures.Future()
                 failed_future.set_exception(e)

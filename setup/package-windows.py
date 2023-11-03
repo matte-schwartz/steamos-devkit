@@ -18,7 +18,7 @@ DIST_DIR = os.path.join(ROOT_DIR, 'dist')
 
 # cursed, but delicious
 sys.path.append(CLIENT_DIR)
-from devkit_client import locate_external_tools
+from devkit_client import locate_cygwin_tools
 sys.path.pop()
 
 # don't let python buffering get in the way or readable output
@@ -64,7 +64,7 @@ if __name__ == '__main__':
         dir_path = os.path.join(CLIENT_DIR, name)
         shutil.copytree(dir_path, os.path.join(DIST_DIR, name), dirs_exist_ok=True)
 
-    cygroot =  os.path.dirname(locate_external_tools()[0])
+    cygroot =  os.path.dirname(locate_cygwin_tools()[0])
     assert os.path.isdir(cygroot)
     cygwin_dst_dir = os.path.join(DIST_DIR, 'cygroot/bin')
     os.makedirs(cygwin_dst_dir, exist_ok=True)

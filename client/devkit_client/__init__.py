@@ -228,7 +228,7 @@ def get_remote_debuggers():
     return g_remote_debuggers
 
 
-def _locate_external_tool(name):
+def _locate_cygwin_tool(name):
     assert sys.platform == 'win32'
     if getattr(sys, 'frozen', False):
         # Scripts that were frozen into a standalone executable via cx_freeze are expected to package the binaries
@@ -262,7 +262,7 @@ def _locate_external_tool(name):
             return ret
     raise Exception('Required external tool not found: {!r}'.format(name))
 
-def locate_external_tools():
+def locate_cygwin_tools():
     '''Returns a tuple of paths (cygpath, ssh, rsync, ssh_know_hosts)'''
     global g_external_tools
     if g_external_tools is not None:
@@ -275,9 +275,9 @@ def locate_external_tools():
                     raise Exception(f'{tool} not found - please install.')
         return g_external_tools
 
-    cygpath = _locate_external_tool('cygpath.exe')
-    ssh = _locate_external_tool('ssh.exe')
-    rsync = _locate_external_tool('rsync.exe')
+    cygpath = _locate_cygwin_tool('cygpath.exe')
+    ssh = _locate_cygwin_tool('ssh.exe')
+    rsync = _locate_cygwin_tool('rsync.exe')
 
     USERPROFILE = os.getenv('USERPROFILE')
     if USERPROFILE is None:
@@ -595,7 +595,7 @@ class DevkitClient(object):
             appdirs.user_config_dir('steamos-devkit'),
             'devkit_rsa',
         )
-        (self.cygpath, self.ssh, self.rsync, self.ssh_known_hosts) = locate_external_tools()
+        (self.cygpath, self.ssh, self.rsync, self.ssh_known_hosts) = locate_cygwin_tools()
         self.ssh_result = {}
         self.last_device_list_time = 0
         self.rsync_process = None
