@@ -38,7 +38,7 @@ if __name__ == '__main__':
     sys.stdout = Unbuffered(sys.stdout)
     sys.stderr = Unbuffered(sys.stderr)
 
-    call(f'python -m venv .')
+    call(f'python3.11 -m venv .')
     interpreter = os.path.join(ROOT_DIR, r'Scripts\python.exe')
     call(f'{interpreter} -m pip install --upgrade pip')
     pip = os.path.join(ROOT_DIR, r'Scripts\pip.exe')

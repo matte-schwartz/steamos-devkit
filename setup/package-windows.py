@@ -72,7 +72,8 @@ if __name__ == '__main__':
         'cygpath.exe',
         'rsync.exe',
         'ssh.exe',
-        'cygcrypto-1.1.dll',
+        'cygcrypto-1.1.dll',    # rsync.exe
+        'cygcrypto-3.dll',      # ssh.exe
         'cygwin1.dll',
         'cygz.dll',
         'cygiconv-2.dll',
