@@ -55,9 +55,10 @@ import tempfile
 import pathlib
 import re
 import threading
-import winreg
-
 import appdirs
+
+if platform.system() == 'Windows':
+    import winreg
 
 import paramiko
 import devkit_client.zeroconf as zeroconf
