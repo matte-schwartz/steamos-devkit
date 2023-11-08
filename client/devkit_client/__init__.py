@@ -1568,8 +1568,11 @@ def screenshot(args):
     # - so they don't accumulate in tmpfs
     # - so we can wait and confirm a new screenshot was delivered
     _simple_ssh(ssh, 'rm /tmp/gamescope_*.png', silent=True)
-    _simple_ssh(ssh, 'kill -USR2 `pidof gamescope`', silent=True, check_status=True)
-    attempts = 50
+    if args.xprop is None:
+        _simple_ssh(ssh, 'kill -USR2 `pidof gamescope`', silent=True, check_status=True)
+    else:
+        _simple_ssh(ssh, f'DISPLAY=:0 xprop -root -f GAMESCOPECTRL_DEBUG_REQUEST_SCREENSHOT 32c -set GAMESCOPECTRL_DEBUG_REQUEST_SCREENSHOT {args.xprop}', silent=True, check_status=True)
+    attempts = 100
     while attempts > 0:
         time.sleep(.1)
         attempts -= 1

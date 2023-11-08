@@ -351,13 +351,14 @@ class DevkitCommands:
     def _screenshot(self, *args):
 
         class ScreenshotArgs:
-            def __init__(self, devkit, folder, filename, do_timestamp):
+            def __init__(self, devkit, folder, filename, do_timestamp, xprop):
                 self.machine, self.machine_name_type = devkit.machine_command_args
                 self.http_port = devkit.http_port
                 self.login = None
                 self.folder = folder
                 self.filename = filename
                 self.do_timestamp = do_timestamp
+                self.xprop = xprop
         screenshot_args = ScreenshotArgs(*args)
         devkit_client.screenshot(screenshot_args)
 
@@ -718,6 +719,10 @@ class Devkit:
                 status_flags['PROTON_LOG'] = self.settings[ProtonLogs.WINEDEBUG_KEY]
         elif 'PROTON_LOG' in status_flags:
             del status_flags['PROTON_LOG']
+
+    @property
+    def gamescope_supports_xprop(self):
+        return self.steamos_status.get('gamescope_supports_xprop', False)
 
     def has_mdns_service(self):
         return self.service_name is not None
@@ -2377,17 +2382,24 @@ class Screenshot(SubTool):
     FOLDER_KEY = 'Screenshot.folder'
     FILENAME_KEY = 'Screenshot.filename'
     TIMESTAMP_KEY = 'Screenshot.timestamp'
+    MODE_KEY = 'Screenshot.mode'
 
-    def setup(self):
+    def setup(self, force_xprop):
+        self.force_xprop = force_xprop
         if not self.FOLDER_KEY in self.settings:
             self.settings[self.FOLDER_KEY] = str(pathlib.Path(os.path.expanduser('~/Pictures')))
         if not self.FILENAME_KEY in self.settings:
             self.settings[self.FILENAME_KEY] = ''
         if not self.TIMESTAMP_KEY in self.settings:
             self.settings[self.TIMESTAMP_KEY] = True
+        if not self.MODE_KEY in self.settings:
+            self.settings[self.MODE_KEY] = 1
         super(Screenshot, self).setup()
 
     def devkits_window_draw(self, selected_devkit):
+        xprop = None
+        use_xprop = selected_devkit.gamescope_supports_xprop or self.force_xprop
+
         imgui.text('Folder:')
         imgui.same_line()
         imgui.set_next_item_width(48*CHARACTER_WIDTH)
@@ -2398,7 +2410,7 @@ class Screenshot(SubTool):
         imgui.same_line()
         imgui.text('Filename (optional):')
         imgui.same_line()
-        imgui.set_next_item_width(32*CHARACTER_WIDTH)
+        imgui.set_next_item_width(18*CHARACTER_WIDTH)
         changed, s = imgui.input_text('##screenshot_filename', self.settings[self.FILENAME_KEY], 128)
         if changed:
             self.settings[self.FILENAME_KEY] = s
@@ -2407,6 +2419,23 @@ class Screenshot(SubTool):
         clicked, v = imgui.checkbox('timestamp', self.settings[self.TIMESTAMP_KEY])
         if clicked:
             self.settings[self.TIMESTAMP_KEY] = v
+
+        if use_xprop:
+            imgui.same_line()
+            mode_choices = [
+                'baseplane only',
+                'all real layers',
+                'full composition',
+                'screen buffer'
+                ]
+            imgui.push_item_width(16*CHARACTER_WIDTH)
+            clicked, selected_index = imgui.combo(
+                '##ScreenshotMode', self.settings[self.MODE_KEY] - 1, mode_choices
+            )
+            imgui.pop_item_width()
+            if clicked:
+                self.settings[self.MODE_KEY] = selected_index + 1
+            xprop = self.settings[self.MODE_KEY]
 
         imgui.same_line()
         # gross - plz halp with layout
@@ -2417,6 +2446,7 @@ class Screenshot(SubTool):
                 self.settings[self.FOLDER_KEY],
                 self.settings[self.FILENAME_KEY],
                 self.settings[self.TIMESTAMP_KEY],
+                xprop
                 )
             self.modal_wait = ModalWait(
                 self.viewport,
@@ -3325,6 +3355,10 @@ def main():
             '--with-cmder', required=False, action='store',
             help='Configure run in terminal to use given exe with cmder syntax. Set to blank to clear.'
         )
+    parser.add_argument(
+        '--screenshot-force-xprop', required=False, action='store_true',
+        help='Force using xprop for screenshots, overriding the gamescope version check.'
+    )
 
     conf = parser.parse_args()
 
@@ -3372,7 +3406,7 @@ def main():
     toolbar.setup()
 
     screenshot = Screenshot(devkit_commands, viewport, toolbar, settings)
-    screenshot.setup()
+    screenshot.setup(conf.screenshot_force_xprop)
     perf_overlay = PerfOverlay(devkit_commands, viewport, toolbar, settings)
     perf_overlay.setup()
     gpu_trace = GPUTrace(devkit_commands, viewport, toolbar, settings)

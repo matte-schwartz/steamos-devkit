@@ -347,6 +347,23 @@ if __name__ == '__main__':
 
     _user_password_is_set = user_password_is_set()
 
+    # optimistic - if the test fails assume this has evolved beyond our ability to check and it's fine
+    gamescope_supports_xprop = True
+    try:
+        output = subprocess.check_output('pacman -Q gamescope',
+                                         shell=True,
+                                         universal_newlines=True)
+        logger.debug(output)
+        (_, major, minor, _) = re.split('gamescope (.*?)\.(.*?)\..*', output)
+        major = int(major)
+        minor = int(minor)
+        if major < 3:
+            gamescope_supports_xprop = False
+        elif major == 3 and minor <= 12:
+            gamescope_supports_xprop = False
+    except Exception as e:
+        logger.warning(f'could not check gamescope version for xprop: {e!r}')
+
     if conf.json:
         ret = {
             'steamdeck': steamdeck,
@@ -368,6 +385,7 @@ if __name__ == '__main__':
             'foxnet_hostname': foxnet_hostname,
             'user_password_is_set': _user_password_is_set,
             'steam_launch_flags': _steam_launch_flags,
+            'gamescope_supports_xprop': gamescope_supports_xprop,
         }
         json.dump(ret, sys.stdout, sort_keys=True, indent=4)
     else:
@@ -386,4 +404,5 @@ if __name__ == '__main__':
         logger.info(f"Foxnet hostname        : {foxnet_hostname}")
         logger.info(f"User password is set   : {'yes' if _user_password_is_set else 'no'}")
         logger.info(f"Steam launch flags     : {_steam_launch_flags}")
+        logger.info(f"Screenshot with xprop  : {gamescope_supports_xprop}")
 
