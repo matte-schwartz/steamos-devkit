@@ -1,3 +1,13 @@
+2023-11-08 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20231108.0
+	* Add support for screenshot modes:
+	  the feature is enabled for gamescope >= 3.13, can be forced with --screenshot-force-xprop
+	  'baseplane only'  : Just the game/base plane
+	  'all real layers' : Just the game + steam overlay/perf overlays
+	  'full composition': Everything, but no display color management + no mura
+	  'screen buffer'   : Mura comp and color management. Exactly what we put on the screen.
+
 2023-09-06 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20230906.1
