@@ -1359,7 +1359,10 @@ class DevkitsWindow(ToolWindow):
                 buttons_index += 1
 
         if len(online_kits) == 0 and len(other_kits) == 0:
-            imgui.text('No devkit discovered on the network (mDNS). If your devkit is running, please add by IP.')
+            imgui.text('No devkit discovered on the network (mDNS).')
+            imgui.text('Make sure the device is in developer mode (Settings -> System -> Enable Developer Mode).')
+            imgui.text('You may need to add the device by IP.')
+            imgui.separator()
 
         if len(online_kits) == 0:
             imgui.text('No registered devkits online! Add a devkit to start.')
