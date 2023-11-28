@@ -1697,6 +1697,7 @@ def dump_controller_config(args):
         raise Exception(json_output['error'])
     logger.info(json_output['success'])
     # retrieve files
+    os.makedirs(args.folder, exist_ok=True)
     client = DevkitClient()
     client.rsync_transfer(
         args.folder,
