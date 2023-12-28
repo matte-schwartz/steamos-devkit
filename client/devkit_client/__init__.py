@@ -615,32 +615,15 @@ class DevkitClient(object):
             # NOTE: this is the path to the ssh client, and may contain spaces (especially likely on windows)
             self.ssh
         ]
-        if self.ssh_known_hosts is not None:
-            cmd += [
-                '-o', f'UserKnownHostsFile={self.ssh_known_hosts}',
-            ]
         cmd += [
             '-o', 'StrictHostKeyChecking=no',
+            '-o', 'UserKnownHostsFile=/dev/null',
             '-o', 'IdentitiesOnly=yes',
             '-t',
             '-i', self.keypath,
             '{}@{}'.format(username, ipaddress),
         ]
         return cmd
-
-    def live_ssh_command(self, username, ipaddress, command):
-        logger.debug('%s@%s: %s', username, ipaddress, command)
-        cmd = self.remote_shell_command(username, ipaddress)
-        cmd.append(command)
-        exit_status = subprocess.call(
-            cmd,
-            creationflags=SUBPROCESS_CREATION_FLAGS
-        )
-
-        logger.info("exit status is %d", exit_status)
-
-        if exit_status != 0:
-            raise subprocess.CalledProcessError(exit_status, command)
 
     def ssh_command(
             self, username, ipaddress, command, stdindata,
