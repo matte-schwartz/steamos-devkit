@@ -192,21 +192,11 @@ def osclient_version():
 
 def session_config():
     '''What is the graphics session configuration?'''
-    # needs to be kept in sync with whatever steamos-session-select is doing
-    sentinel_file = os.path.join(
-        os.environ.get(
-            'XDG_CONFIG_DIR',
-            os.path.join(os.environ['HOME'], '.config')
-        ),
-        'steamos-session-select'
-    )
-    # the sentinel file if exists will point to x11 or wayland
-    # (hu we don't use this for anything)
-    #is_wayland = False
-    #if os.path.exists(sentinel_file):
-    #    s = open(sentinel_file, 'rt').read()
-    #    is_wayland = s.find('wayland') != -1
+    # steamos-session-select writes this file
     conf_file = '/etc/sddm.conf.d/zz-steamos-autologin.conf'
+    if not os.path.exists(conf_file):
+        # fallback to the OS default
+        conf_file = '/etc/sddm.conf.d/steamos.conf'
     if os.path.exists(conf_file):
         s = open(conf_file, 'rt').read()
         if s.find('plasmawayland.desktop') != -1:
