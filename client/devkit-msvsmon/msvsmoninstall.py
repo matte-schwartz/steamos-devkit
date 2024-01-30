@@ -99,9 +99,16 @@ class MSVSMonPatcher:
     def ProcessSteamLibrary(self, steam_library_folder):
         logger.info(f'Process Steam library: {steam_library_folder}')
         for proton_folder in glob.glob(os.path.join(steam_library_folder, 'steamapps/common/Proton*')):
-            install = proton_folder.endswith('Proton - Experimental') or proton_folder.find('Proton 7') != -1
+            install = proton_folder.endswith('Proton - Experimental')
             if not install:
-                logger.warning(f'Remote debugging only supported in the Proton 7 and experimental releases, skipping {proton_folder}')
+                try:
+                    version = int(re.search(r'Proton ([0-9]*)\..*$', proton_folder).group(1))
+                    if version >= 7:
+                        install = True
+                except:
+                    pass
+            if not install:
+                logger.warning(f'Proton {proton_folder!r} does not support remote debugging (>= 7 or experimental required), skipping.')
             else:
                 self.ProcessProtonFolder(proton_folder)
 
