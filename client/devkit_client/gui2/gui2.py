@@ -1836,10 +1836,14 @@ class UpdateTitle(ToolWindow):
         if gameid is None:
             self.apply_default_settings()
             self.selected_config = ''
-            return
+            return True
+        if self.selected_config == gameid:
+            # no change, not restoring settings
+            return False
         self.selected_config = gameid
         self.settings[UpdateTitle.SELECTED_CONFIG_KEY] = gameid
         self.restore_settings(gameid)
+        return True
 
     def tick(self, visible):
         (_, opened) = imgui.begin(self.BUTTON_NAME, True, imgui.WINDOW_NO_COLLAPSE)
@@ -2189,8 +2193,10 @@ class UpdateTitle(ToolWindow):
                     failed_future,
                 )
                 return
-        # bring to the foreground in case some other title was selected
-        self._select_title(name)
+        # bring to the foreground if needed, in case some other title was selected
+        ret = self._select_title(name)
+        # we save title settings before doing a normal manual upload, follow the same pattern here
+        self.save_settings(f'UpdateTitle.{self.title_name}.', self.settings)
         self.do_upload()
 
 
