@@ -1,3 +1,13 @@
+2024-02-16 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20240216.0
+	* Improve feedback while triggering Radeon Graphics Profiler captures.
+	* Fix Proton version check for remote debug, which was ignoring 8.
+	* Save title upload settings before doing auto upload triggers, making this consistent with manual uploads UX.
+	* Fix Deck X11/wayland session detection.
+	* Add a tip about putting the device in developer mode before it will advertise over mDNS when none are seen.
+	* Create destination folder on the fly if needed when using 'Get Controller Config' functionality.
+
 2023-11-08 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20231108.0
