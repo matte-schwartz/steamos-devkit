@@ -64,6 +64,7 @@ import paramiko
 import devkit_client.zeroconf as zeroconf
 import devkit_client.captured_popen as captured_popen
 import devkit_client.custom_terminal as custom_terminal
+import signalslot
 
 try:
     import devkit_client.version
@@ -128,6 +129,9 @@ g_captured_popen_factory = captured_popen.CapturedPopenFactory()
 g_custom_terminal = custom_terminal.CustomTerminal()
 
 g_zeroconf_listener = None
+
+# A signal emitted to update status for long running async operations, for interested parties
+g_signal_status = signalslot.Signal(args=['status'])
 
 # This burned me twice now .. https://twitter.com/TTimo/status/1582509449838989313
 from os import getenv as os_getenv
@@ -1484,10 +1488,17 @@ def gpu_trace(args):
 
 
 def rgp_capture(args):
+    global g_signal_status
+    g_signal_status.emit(status='Trigger RGP collection...')
+
     ssh = _open_ssh_for_args(args)
 
     _simple_ssh(ssh, 'rm /tmp/*.rgp', silent=True)
+    # Steam client sets RADV_THREAD_TRACE_TRIGGER=/tmp/rgp.trigger
+    # we could set to a different path, but atm RADV always writes the trace to /tmp regardless of the location of the trigger
     _simple_ssh(ssh, 'touch /tmp/rgp.trigger', silent=True)
+
+    g_signal_status.emit(status='Wait for trace...')
 
     remote_filename = None
     filename_wait = time.time()
@@ -1511,6 +1522,8 @@ def rgp_capture(args):
         size = updated_size
         time.sleep(.5)
 
+    g_signal_status.emit(status='Download trace...')
+
     # transfer
     os.makedirs(args.local_folder, exist_ok = True)
     local_path = os.path.join(args.local_folder, remote_filename)
@@ -1519,6 +1532,7 @@ def rgp_capture(args):
     logger.info(f'Downloaded to {local_path}')
 
     if args.launch:
+        g_signal_status.emit(status='Launch profiler...')
         if not os.path.exists(args.rgp_path):
             raise Exception(f'Invalid Radeon GPU Profiler path - does not exist: {args.rgp_path}')
         profiler_cmd = [args.rgp_path, local_path]

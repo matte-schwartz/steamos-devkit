@@ -2633,7 +2633,13 @@ class RGPCapture(SubTool):
             if rgp_path is None:
                 rgp_path = 'NOT SET'
             self.settings[self.RGP_KEY] = rgp_path
+        devkit_client.g_signal_status.connect(self._status_update)
         super(RGPCapture, self).setup()
+
+    def _status_update(self, status, **kwargs):
+        if not self.modal_wait:
+            return
+        self.modal_wait.override_output_text = status
 
     def devkits_window_draw(self, selected_devkit):
         imgui.text('Folder:')
