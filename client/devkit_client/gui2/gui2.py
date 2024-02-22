@@ -3104,6 +3104,10 @@ class ImGui_SDL2_Viewport:
     def setup(self):
         self.report_versions()
 
+        if platform.system() == 'Linux':
+            # Fix startup on wayland - looks like this needs to be set before init
+            sdl2.SDL_SetHint(sdl2.SDL_HINT_VIDEODRIVER, b"wayland,x11")
+
         if sdl2.SDL_Init(sdl2.SDL_INIT_EVERYTHING) < 0:
             raise Exception('SDL_Init failed: %d'.format(sdl2.SDL_GetError()))
 
