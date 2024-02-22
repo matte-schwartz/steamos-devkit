@@ -19,6 +19,7 @@ DIST_DIR = os.path.join(ROOT_DIR, 'dist')
 # cursed, but delicious
 sys.path.append(CLIENT_DIR)
 from devkit_client import locate_cygwin_tools
+from devkit_client.gui2.gui2 import ICON_FILENAME
 sys.path.pop()
 
 # don't let python buffering get in the way or readable output
@@ -93,6 +94,7 @@ if __name__ == '__main__':
     shutil.copytree(os.path.join(ROOT_DIR, 'third-party-licenses'), os.path.join(DIST_DIR, 'third-party-licenses'), dirs_exist_ok=True)
 
     shutil.copy(os.path.join(ROOT_DIR, 'ChangeLog'), DIST_DIR)
+    shutil.copy(os.path.join(CLIENT_DIR, ICON_FILENAME), DIST_DIR)
 
     zippath = os.path.join(ROOT_DIR, 'devkit-gui-win64.zip')
     print(f'Creating archive: {zippath}')

@@ -17,6 +17,10 @@ SETUP_DIR = os.path.abspath(os.path.dirname(__file__))
 ROOT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
 CLIENT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../client'))
 
+# cursed, but delicious
+sys.path.append(CLIENT_DIR)
+from devkit_client.gui2.gui2 import ICON_FILENAME
+sys.path.pop()
 
 # don't let python buffering get in the way or readable output
 # https://stackoverflow.com/questions/107705/disable-output-buffering
@@ -80,6 +84,7 @@ if __name__ == '__main__':
                 os.path.join(zipappdirname, 'site-packages/devkit-utils')
                 )
             shutil.copy(os.path.join(ROOT_DIR, 'ChangeLog'), zipappdirname)
+            shutil.copy(os.path.join(ROOT_DIR, 'client', ICON_FILENAME), os.path.join(zipappdirname, 'site-packages'))
             output_path = os.path.abspath(os.path.join(conf.output_directory, output_name))
             zipapp.create_archive(
                 zipappdirname,

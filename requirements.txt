@@ -1,4 +1,4 @@
-PySDL2
+PySDL2-dll
 PyOpenGL
 signalslot >= 0.2.0
 ifaddr
