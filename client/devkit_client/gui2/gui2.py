@@ -35,8 +35,6 @@ import signalslot
 logging.getLogger('OpenGL.plugins').setLevel(logging.ERROR)
 import OpenGL.GL as gl
 import sdl2
-# requires PySDL2-dll
-import sdl2.sdlimage
 import imgui
 import imgui.integrations.sdl2
 
@@ -3091,15 +3089,7 @@ class ImGui_SDL2_Viewport:
         # https://github.com/libsdl-org/SDL/blob/SDL2/src/video/windows/SDL_windowswindow.c#L639
         # ok, not documented otherwise, but SDL_SetWindowIcon expects ARGB8888
 
-        icon_image = sdl2.sdlimage.IMG_Load(icon_file)
-        assert icon_image.contents.format.contents.format == sdl2.SDL_PIXELFORMAT_ARGB8888
-        # this works, but requires PySDL2-dll and SDL_Image, and I didn't want it
-        # NARRATOR: he later learned that was a mistake
-#        sdl2.SDL_SetWindowIcon(self.sdl_window, icon_image)
-#        sdl2.SDL_FreeSurface(icon_image)
-
-        # Let's direct load instead!
-        # Uncompressed TGAs are trivially easy, we don't need sdl2.sdlimage..
+        # Load some pixels. Uncompressed TGAs are trivially easy, we don't need sdl2.sdlimage..
         tga = open(icon_file,'rb').read()
         assert tga[0] == 0 # no image ID
         assert tga[1] == 0 # no colormap
@@ -3109,40 +3099,11 @@ class ImGui_SDL2_Viewport:
         depth = tga[16]
         assert depth == 32 # RGBA
 
-        # It's a little odd to be giving the line stride in those APIs (w*4), but whatever..
-        # BUG (??): does not load any pixels .. you just get a blank icon
-        # tried variations with SDL_CreateRGBSurfaceFrom and other pixel formats .. none of them worked
-        tga_surface = sdl2.SDL_CreateRGBSurfaceWithFormatFrom(tga[18:18+w*h*4], w, h, depth, w*4, sdl2.SDL_PIXELFORMAT_ARGB8888)
-        assert tga_surface is not None
-        assert tga_surface.contents.format.contents.format == sdl2.SDL_PIXELFORMAT_ARGB8888
-
-        # Try to force a solid fill?
-        # BUG (??): that doesn't work either, whatever happened with the surface setup, we can't write to it
-        pixies = ctypes.cast(tga_surface.contents.pixels, ctypes.POINTER(ctypes.c_uint32))
-        i = 0
-        while i < w*h:
-            # ARGB, alpha is the high byte, solid green
-            pixies[i] = 0xff00ff00 # BGRA32
-            i += 1
-
-        # ^ go ahead, test the above:
-        #sdl2.SDL_SetWindowIcon(self.sdl_window, tga_surface)
-        #sdl2.SDL_FreeSurface(tga_surface)
-
-        # Let's create a surface from scratch and see if that works better
-        # order is red, green, blue, alpha masks. swizzle away
+        # param order is red, green, blue, alpha masks. swizzle away
         tga_surface = sdl2.SDL_CreateRGBSurface(0, w, h, depth, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000)
         assert tga_surface.contents.format.contents.format == sdl2.SDL_PIXELFORMAT_ARGB8888
 
-        # solid fill
-        pixies = ctypes.cast(tga_surface.contents.pixels, ctypes.POINTER(ctypes.c_uint32))
-        i = 0
-        while i < w*h:
-            # ARGB .. alpha is the high byte, solid green
-            pixies[i] = 0xff00ff00
-            i += 1
-
-        # smash the image pixels in as is .. victory!
+        # smash the pixels in
         pixies = ctypes.cast(tga_surface.contents.pixels, ctypes.POINTER(ctypes.c_byte))
         i = 0
         while i < w*h*4:
