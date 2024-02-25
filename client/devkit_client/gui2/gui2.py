@@ -43,6 +43,8 @@ from devkit_client import SteamPlayDebug
 import paramiko
 import devkit_client.zeroconf as zeroconf
 
+from devkit_client.icon import ICON_FILENAME
+
 CHARACTER_WIDTH = 8
 CHARACTER_HEIGHT = 14 # e.g. a line of text
 
@@ -52,8 +54,6 @@ GUEST_LAN_LIMITED_CONNECTIVITY = 'WARNING: DEVICE IS ON GUEST LAN - no network c
 GUEST_LAN_PATTERN = 'DISABLE'
 
 TOGGLE_DEV_MODE = 'If this is not a network issue, please toggle developer mode off then back on for the device and try again.'
-
-ICON_FILENAME = 'logo-steamdeck-256.tga'
 
 logger = logging.getLogger(__name__)
 

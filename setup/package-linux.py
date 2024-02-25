@@ -19,7 +19,7 @@ CLIENT_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '../client'
 
 # cursed, but delicious
 sys.path.append(CLIENT_DIR)
-from devkit_client.gui2.gui2 import ICON_FILENAME
+from devkit_client.icon import ICON_FILENAME
 sys.path.pop()
 
 # don't let python buffering get in the way or readable output

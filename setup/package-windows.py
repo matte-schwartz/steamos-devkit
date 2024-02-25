@@ -19,7 +19,7 @@ DIST_DIR = os.path.join(ROOT_DIR, 'dist')
 # cursed, but delicious
 sys.path.append(CLIENT_DIR)
 from devkit_client import locate_cygwin_tools
-from devkit_client.gui2.gui2 import ICON_FILENAME
+from devkit_client.icon import ICON_FILENAME
 sys.path.pop()
 
 # don't let python buffering get in the way or readable output
