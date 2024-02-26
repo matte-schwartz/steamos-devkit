@@ -3099,19 +3099,15 @@ class ImGui_SDL2_Viewport:
         depth = tga[16]
         assert depth == 32 # RGBA
 
-        # param order is red, green, blue, alpha masks. swizzle away
-        tga_surface = sdl2.SDL_CreateRGBSurface(0, w, h, depth, 0x00ff0000, 0x0000ff00, 0x000000ff, 0xff000000)
-        assert tga_surface.contents.format.contents.format == sdl2.SDL_PIXELFORMAT_ARGB8888
+        # Workaround for https://github.com/py-sdl/py-sdl2/issues/275
+        # SDL_CreateRGBSurfaceWithFormatFrom silently failing when passed a sub-array
+        pixels=tga[18:18+w*h*4]
+        icon = sdl2.SDL_CreateRGBSurfaceWithFormatFrom(pixels, w, h, 32, w*4, sdl2.SDL_PIXELFORMAT_ARGB8888)
+        assert icon is not None
+        assert icon.contents.format.contents.format == sdl2.SDL_PIXELFORMAT_ARGB8888
 
-        # smash the pixels in
-        pixies = ctypes.cast(tga_surface.contents.pixels, ctypes.POINTER(ctypes.c_byte))
-        i = 0
-        while i < w*h*4:
-            pixies[i] = tga[18+i]
-            i += 1
-
-        sdl2.SDL_SetWindowIcon(self.sdl_window, tga_surface)
-        sdl2.SDL_FreeSurface(tga_surface)
+        sdl2.SDL_SetWindowIcon(self.sdl_window, icon)
+        sdl2.SDL_FreeSurface(icon)
 
         self.gl_context = sdl2.SDL_GL_CreateContext(self.sdl_window)
         if self.gl_context is None:
