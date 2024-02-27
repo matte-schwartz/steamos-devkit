@@ -2054,7 +2054,7 @@ class UpdateTitle(ToolWindow):
                 self.restart_steam = v
             imgui.text('gdbserver:')
             imgui.next_column()
-            clicked, v = imgui.checkbox('Use gdbserver (will wait with no rendering for a remote attach, check documentation)', self.gdbserver)
+            clicked, v = imgui.checkbox('Use gdbserver', self.gdbserver)
             imgui.next_column()
             if clicked:
                 self.gdbserver = v
