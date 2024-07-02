@@ -56,6 +56,7 @@ import pathlib
 import re
 import threading
 import appdirs
+import datetime
 
 if platform.system() == 'Windows':
     import winreg
@@ -1594,10 +1595,23 @@ def screenshot(args):
                     timestamp = ''
                     if m is not None:
                         timestamp = m.group(0)
+                    else:
+                        # gamescope stopped settings timestamps ..
+                        timestamp = '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
                     local_path = str(pathlib.Path(args.folder, filename + timestamp)) + suffix
                 else:
-                    # this will silently overwrite since we were not asked to put a timestamp
                     local_path = str(pathlib.Path(args.folder, filename)) + suffix
+            if os.path.exists(local_path):
+                # do not overwrite ..
+                suffix = pathlib.Path(local_path).suffix
+                base = local_path[:-len(suffix)]
+                i = 0
+                while True:
+                    test_path = f'{base}_{i:03}{suffix}'
+                    if not os.path.exists(test_path):
+                        local_path = test_path
+                        break
+                    i += 1
 
             os.makedirs(os.path.dirname(local_path), exist_ok=True)
 
