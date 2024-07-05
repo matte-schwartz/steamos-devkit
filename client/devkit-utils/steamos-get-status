@@ -116,10 +116,7 @@ def steam_status():
     if s is None:
         return SteamStatus.NOT_RUNNING
     if s.find('.local/share/Steam/') != -1:
-        if os.path.exists(
-            os.path.expanduser('~/devkit-game/devkit-steam')
-        ):
-            # assume this is OS_DEV (with logging) - to be extra sure we could check the stdout/stderr fds..
+        if os.path.exists(os.path.expanduser('~/devkit-game/devkit-steam')):
             return SteamStatus.OS_DEV
         return SteamStatus.OS
     if s.find('devkit-game/steam/') != -1:
@@ -133,23 +130,17 @@ def steam_status():
 def steam_configuration():
     '''How is the Steam client configured to run?'''
     devkit_steam_trampoline_path = os.path.join(DEVKIT_TOOL_FOLDER, 'devkit-steam')
-    if os.path.exists(devkit_steam_trampoline_path):
-        t = open(devkit_steam_trampoline_path, 'rt').read()
-        if t.find('SteamStatus.OS_DEV') != -1:
-            return SteamConfig.OS_DEV
-        if t.find('SteamStatus.SIDE') != -1:
-            return SteamConfig.SIDE
-        elif t.find('/steam-vscode') != -1:
-            return SteamConfig.VSCODE
-        elif t.find('configuration tag') == -1:
-            # it may be an old trampoline script that didn't write a configuration tag
-            # in order to avoid strife at the next upgrade after 20220215, assume a side client
-            logger.warning(f'no \'configuration tag\' line in {devkit_steam_trampoline_path}, assuming old script')
-            return SteamConfig.SIDE
-        else:
-            logger.warning(f'could not determine what {devkit_steam_trampoline_path} means to do')
-            return SteamConfig.ERROR
-    return SteamConfig.OS
+    if not os.path.exists(devkit_steam_trampoline_path):
+        return SteamConfig.OS
+    t = open(devkit_steam_trampoline_path, 'rt').read()
+    if t.find('SteamStatus.OS_DEV') != -1:
+        return SteamConfig.OS_DEV
+    if t.find('SteamStatus.SIDE') != -1:
+        return SteamConfig.SIDE
+    if t.find('/steam-vscode') != -1:
+        return SteamConfig.VSCODE
+    logger.warning(f'could not determine what {devkit_steam_trampoline_path} means to do')
+    return SteamConfig.ERROR
 
 def osclient_branch():
     '''Which branch is the default Steam 'OS client' configured to use?'''

@@ -278,9 +278,6 @@ class DevkitCommands:
         sync_logs_args = SyncLogsArgs(devkit, logs_folder)
         devkit_client.sync_logs(sync_logs_args)
 
-        if devkit.steam_client_status == 'SteamStatus.OS':
-            raise Exception('Some important logs are not be collected, please change the Steam client mode to \'logging+cmdline\' in the Devkit tab')
-
         return True
 
     def sync_logs(self, devkit, logs_folder):
@@ -1475,7 +1472,7 @@ class DevkitsWindow(ToolWindow):
                     imgui.same_line()
                     config_options = [
                         ( 'OS client', 'SteamStatus.OS' ),
-                        ( 'OS client dev mode (logging+cmdline)', 'SteamStatus.OS_DEV' ),
+                        ( 'OS client with command line', 'SteamStatus.OS_DEV' ),
                     ]
                     if steamos_status['has_side_loaded_client']:
                         config_options.append( ( 'side loaded client', 'SteamStatus.SIDE' ) )
@@ -2303,7 +2300,7 @@ class DeviceLogs(ToolWindow):
             self.reload_logs()
 
     def reload_logs(self):
-        steam_log_path = os.path.join(self.logs_folder, 'steam_logs', 'output.log')
+        steam_log_path = os.path.join(self.logs_folder, 'steam_logs', 'console-linux.txt')
         if not os.path.exists(steam_log_path):
             logger.warning('Devkit log does not exist: %r', steam_log_path)
             return
