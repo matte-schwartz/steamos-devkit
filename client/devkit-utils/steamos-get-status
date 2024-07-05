@@ -227,8 +227,7 @@ def get_os_info():
     return os_info
 
 def steam_default_args():
-    '''Pull the default command line for the OS client so we can use it in OS_DEV mode'''
-    ret = ['-steamos3', '-steamdeck']
+    ret = ['-steamos3', '-steampal', '-steamdeck', '-gamepadui']
     try:
         output = subprocess.check_output('cat /usr/bin/gamescope-session | grep ^steamargs',
                                          shell=True,
