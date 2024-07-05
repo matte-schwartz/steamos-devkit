@@ -98,7 +98,7 @@ ASCII_LOWERCASE = str.maketrans(string.ascii_uppercase,
                                 string.ascii_lowercase)
 
 # Default urllib timeout is way too long for LAN hosts
-REQUEST_TIMEOUT = 2
+REQUEST_TIMEOUT = 5
 
 # Root of the installation - do not use getcwd!
 if getattr(sys, 'frozen', False):
