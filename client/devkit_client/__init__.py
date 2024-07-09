@@ -1454,12 +1454,13 @@ def _obtain_trace(ssh, sftp, args):
     capture_cmd = f'gpu-trace --capture --no-gpuvis -o {remote_trace_file}'
     _, err_text, exit_status = _simple_ssh(ssh, capture_cmd)
 
-    if err_text.find('Capture request failed') != -1 or err_text.find('Failed to capture a perf trace.') != -1:
-        # recognize this error, tell the daemon to start tracing and try again
+    if exit_status != 0 or err_text.find('Failed to capture trace') != -1:
+        # recognize this error, tell the daemon to start tracing
         # (assuming that tracing mode not enabled is the cause .. this is fragile unfortunately)
         logger.info('start tracing and try again')
         start_cmd = 'gpu-trace --start'
         _simple_ssh(ssh, start_cmd)
+        # issue again
         _, err_text, exit_status = _simple_ssh(ssh, capture_cmd)
 
     if exit_status != 0:
