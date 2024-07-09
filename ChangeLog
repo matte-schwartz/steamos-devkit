@@ -1,3 +1,11 @@
+2024-07-09 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20240709.0
+	* Fixed the 'System Trace' button no longer starting the tracing service if needed.
+	* Support the recent changes to Steam client logs capturing, with an easier interface and no longer needing to enable logging (always on).
+	* Slightly increase timeout of some operations to help on slow wifi.
+	* Fixed the timestamp checkbox no longer working when taking screenshots.
+
 2024-02-16 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20240216.0
