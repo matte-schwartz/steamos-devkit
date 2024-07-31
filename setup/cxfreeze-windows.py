@@ -34,6 +34,7 @@ assert sys.platform == 'win32'
 
 module_map = {
     'PySDL2': 'sdl2',
+    'pysdl2-dll': 'sdl2dll',
     'PyOpenGL': 'OpenGL',
     'PyNaCl': 'nacl',
     'imgui[sdl2]': 'imgui',
