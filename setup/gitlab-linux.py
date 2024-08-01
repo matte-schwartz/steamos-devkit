@@ -41,7 +41,7 @@ if __name__ == '__main__':
     sys.stderr = Unbuffered(sys.stderr)
 
     os.makedirs(ARTIFACTS_DIR, exist_ok=True)
-    for python_minor in (9, 10, 11):
+    for python_minor in (9, 10, 11, 12):
         build_dir = os.path.abspath(os.path.join(ROOT_DIR, f'../steamos-devkit-py3{python_minor}'))
         interpreter = f'python3.{python_minor}'
         # using pipenv wasn't the best idea for CI, it leaves it's files in ~/.local/share/virtualenvs/,

@@ -79,9 +79,9 @@ Instructions below use [pipenv](https://pipenv.pypa.io/en/latest/), but can be a
 
 ## One time setup:
 
-From a blank Ubuntu 18 (bionic) VM, or via toolbox, podman, docker etc.:
+From a blank Ubuntu 20.04 (focal) - via VM, toolbox, podman, docker etc.:
 
-Installing 3.9, 3.10, 3.11 backports from https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa
+Installing 3.9, 3.10, 3.11, 3.12 backports from https://launchpad.net/~deadsnakes/+archive/ubuntu/ppa
 
 As root:
 
@@ -89,7 +89,7 @@ As root:
 $ add-apt-repository ppa:deadsnakes/ppa
 $ apt-get update
 $ apt-get upgrade
-$ apt-get install gcc python3.9 python3.9-dev python3.9-distutils python3.10 python3.10-dev python3.10-distutils python3.11 python3.11-dev python3.11-distutils
+$ apt-get install gcc g++ python3.9 python3.9-dev python3.9-distutils python3.10 python3.10-dev python3.10-distutils python3.11 python3.11-dev python3.11-distutils python3.12 python3.12-dev python3.12-distutils
 ```
 
 Boostrapping pip and pipenv.
@@ -104,6 +104,8 @@ $ python3.10 ./get-pip.py
 $ python3.10 -m pip install pipenv
 $ python3.11 ./get-pip.py
 $ python3.11 -m pip install pipenv
+$ python3.12 ./get-pip.py
+$ python3.12 -m pip install pipenv
 ```
 
 ## Package:
