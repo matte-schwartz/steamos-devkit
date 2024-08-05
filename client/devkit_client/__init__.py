@@ -1586,22 +1586,23 @@ def screenshot(args):
                 args.folder = os.getcwd()
 
             if args.filename is None or len(args.filename) == 0:
-                local_path = str(pathlib.Path(args.folder, remote_filename))
-            else:
-                suffix = pathlib.Path(remote_filename).suffix
-                filename = str(pathlib.Path(args.filename).with_suffix(''))
-                if args.do_timestamp:
-                    # use the timestamp of the incoming file, but use the file prefix that has been set
-                    m = re.search('_[0-9-_]*', remote_filename)
-                    timestamp = ''
-                    if m is not None:
-                        timestamp = m.group(0)
-                    else:
-                        # gamescope stopped settings timestamps ..
-                        timestamp = '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
-                    local_path = str(pathlib.Path(args.folder, filename + timestamp)) + suffix
+                args.filename = remote_filename
+
+            suffix = pathlib.Path(remote_filename).suffix
+            filename = str(pathlib.Path(args.filename).with_suffix(''))
+            if args.do_timestamp:
+                # use the timestamp of the incoming file, but use the file prefix that has been set
+                m = re.search('_[0-9-_]*', remote_filename)
+                timestamp = ''
+                if m is not None:
+                    timestamp = m.group(0)
                 else:
-                    local_path = str(pathlib.Path(args.folder, filename)) + suffix
+                    # gamescope stopped settings timestamps ..
+                    timestamp = '-' + datetime.datetime.now().strftime('%Y%m%d%H%M%S')
+                local_path = str(pathlib.Path(args.folder, filename + timestamp)) + suffix
+            else:
+                local_path = str(pathlib.Path(args.folder, filename)) + suffix
+
             if os.path.exists(local_path):
                 # do not overwrite ..
                 suffix = pathlib.Path(local_path).suffix
