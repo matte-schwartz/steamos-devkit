@@ -3067,6 +3067,8 @@ class ImGui_SDL2_Viewport:
         sdl2.SDL_SetHint(sdl2.SDL_HINT_VIDEO_HIGHDPI_DISABLED, b"1")
         # Do not disable system composition, which in turn would disable transparent windows in CEF
         sdl2.SDL_SetHint(sdl2.SDL_HINT_VIDEO_X11_NET_WM_BYPASS_COMPOSITOR, b"0")
+        # Do not inhibit the screen saver when this is running
+        sdl2.SDL_SetHint(sdl2.SDL_HINT_VIDEO_ALLOW_SCREENSAVER, b"1")
 
         self.sdl_window = sdl2.SDL_CreateWindow(self.window_name.encode('utf-8'),
                                     sdl2.SDL_WINDOWPOS_CENTERED, sdl2.SDL_WINDOWPOS_CENTERED,
