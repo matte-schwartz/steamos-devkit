@@ -53,7 +53,7 @@ GAMEID_ALLOWED_PATTERN = '^[A-Za-z_][A-Za-z0-9_.]+$'
 GUEST_LAN_LIMITED_CONNECTIVITY = 'WARNING: DEVICE IS ON GUEST LAN - no network connectivity, cannot be used.'
 GUEST_LAN_PATTERN = 'DISABLE'
 
-TOGGLE_DEV_MODE = 'If this is not a network issue, please toggle developer mode off then back on for the device and try again.'
+TOGGLE_DEV_MODE = 'Make sure developer mode is enabled on the device. Could also be a network config or firewall issue.'
 
 logger = logging.getLogger(__name__)
 
@@ -1312,10 +1312,13 @@ class DevkitsWindow(ToolWindow):
                                 imgui.same_line()
                                 ssh_status = 'open' if kit.ssh_connectivity else 'closed'
                                 http_status = 'open' if kit.http_connectivity else 'closed'
-                                imgui.text(f'WARNING: The device is visible over mDNS, but some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                                 if not kit.http_connectivity:
-                                    imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
+                                    # sshd is running but we don't see the devkit service, could be that dev mode that turned back off
+                                    # so make that our first message
                                     imgui.text(TOGGLE_DEV_MODE)
+                                    # line up the port details warning below
+                                    imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
+                                imgui.text(f'WARNING: The device is visible over mDNS, but some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                 else:
                     assert kit.state == DevkitState.devkit_init_failed
                     imgui.text('Init failed')
@@ -1346,15 +1349,15 @@ class DevkitsWindow(ToolWindow):
                                 if not kit.ssh_connectivity and not kit.http_connectivity:
                                     imgui.text(f'WARNING: device added by IP, did not respond.')
                                 else:
-                                    imgui.text(f'WARNING: device added by IP, some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                                     if not kit.http_connectivity:
-                                        imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
                                         imgui.text(TOGGLE_DEV_MODE)
+                                        imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
+                                    imgui.text(f'WARNING: device added by IP, some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                             else:
-                                imgui.text(f'WARNING: device discovered over mDNS, but some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                                 if not kit.http_connectivity:
-                                    imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
                                     imgui.text(TOGGLE_DEV_MODE)
+                                    imgui.set_cursor_pos_x(50*CHARACTER_WIDTH)
+                                imgui.text(f'WARNING: device discovered over mDNS, but some network ports are unreachable (22 {ssh_status}, {kit.http_port} {http_status}): cannot use this kit')
                 buttons_index += 1
 
         if len(online_kits) == 0 and len(other_kits) == 0:
