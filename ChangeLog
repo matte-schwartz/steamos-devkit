@@ -1,3 +1,10 @@
+2024-10-25 Timothee Besset <ttimo@valvesoftware.com>
+
+	* Release v0.20241025.0
+	* Fix launching from Steam under scout SLR.
+	* Tweak the UX when asking the user if device is in developer mode for pairing.
+	* Fix timestamp flag in screenshots when no filename is specified.
+
 2024-08-04 Timothee Besset <ttimo@valvesoftware.com>
 
 	* Release v0.20240804.0
