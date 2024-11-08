@@ -2113,6 +2113,28 @@ class UpdateTitle(ToolWindow):
         logger.info('Cancelling upload operation')
         self.cancel_signal.emit()
 
+    def on_upload_done(self, **kwargs):
+        e = self.modal_wait.error
+        if e is not None and str(e).find('Please install app id 480') >= 0:
+            # user is trying to deploy the Steamworks SDK sample app,
+            # that requires having 480 installed to the account which isn't super obvious to do 
+            # as it does not show in the store
+            logger.info('AppID 480 is needed, installing')
+            install_480_future = self.devkit_commands.simple_command(
+                self.devkits_window.selected_devkit,
+                ['steam', 'steam://install/480']
+            )
+            self.modal_wait = ModalWait(
+                self.viewport,
+                self.toolbar,
+                'Installing Steamworks SDK example AppID 480 (Spacewars)',
+                install_480_future,
+            )
+            def set_480_message(**kwargs):
+                self.modal_wait.override_output_text = 'Please follow instructions on your device to install the test app and try again.'
+            set_480_message()
+            self.modal_wait.signal_task_done.connect(set_480_message)
+
     def do_upload(self):
         # build the rsync command line args for filtering upload content
         filter_args = []
@@ -2167,11 +2189,12 @@ class UpdateTitle(ToolWindow):
             cancel_signal=True,
             )
         self.modal_wait.cancel_signal.connect(self.on_ui_cancel_upload)
+        self.modal_wait.signal_task_done.connect(self.on_upload_done)
         self.toolbar.focus_console()
 
     def on_build_success(self, name):
         auto_upload_pref = f'UpdateTitle.{name}.auto_upload'
-        if not ( auto_upload_pref in self.settings ):
+        if auto_upload_pref not in self.settings:
             raise Exception(f'No such title: {name}')
         if self.devkits_window.selected_devkit is None:
             raise Exception('No devkit selected')
@@ -2196,7 +2219,7 @@ class UpdateTitle(ToolWindow):
                 )
                 return
         # bring to the foreground if needed, in case some other title was selected
-        ret = self._select_title(name)
+        self._select_title(name)
         # we save title settings before doing a normal manual upload, follow the same pattern here
         self.save_settings(f'UpdateTitle.{self.title_name}.', self.settings)
         self.do_upload()
