@@ -1566,7 +1566,7 @@ def screenshot(args):
     # wipe any existing screenshot first:
     # - so they don't accumulate in tmpfs
     # - so we can wait and confirm a new screenshot was delivered
-    _simple_ssh(ssh, 'rm /tmp/gamescope_*.png', silent=True)
+    _simple_ssh(ssh, 'rm /tmp/gamescope*.png', silent=True)
     if args.xprop is None:
         _simple_ssh(ssh, 'kill -USR2 `pidof gamescope`', silent=True, check_status=True)
     else:
