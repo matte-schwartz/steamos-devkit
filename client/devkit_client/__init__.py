@@ -532,37 +532,65 @@ def get_public_key(key):
 
 
 def _fix_key_permissions(key_path, pubkey_path):
-    if platform.system() == 'Linux':
-        # enforce/fix file permissions
-        os.chmod(key_path, 0o400)
-        os.chmod(pubkey_path, 0o400)
-    else:
-        # fix permissions for private keys the windows way, keep ssh happy
-        # do not rely on get_username here, use the full domain\name of the current user - some systems fail if you just give username
-        # also icacls.exe docs suggest this should work with the SID, but that will fail with "No mapping between account names and security IDs was done."
-        # I really hate everything about this ...
-        username = windows_get_domain_and_name()
-        for cmd in (
+    """
+    Set file permissions for private and public keys in a cross-platform manner.
+    - On Windows, use icacls.exe (the 'Windows way').
+    - On everything else (Linux, macOS, etc.), use chmod.
+    """
+
+    current_platform = platform.system()
+    logger.debug(f"Running _fix_key_permissions on {current_platform}")
+
+    if current_platform == 'Windows' or os.name == 'nt':
+        # ---------------------------------------------------------------------
+        # Windows-specific permissions using icacls.exe
+        # ---------------------------------------------------------------------
+        username = windows_get_domain_and_name()  # Your existing function call
+        logger.debug(f"Detected Windows. Using icacls.exe for user '{username}'")
+
+        commands = [
             ['icacls.exe', key_path, '/Reset'],
             ['icacls.exe', key_path, '/Inheritance:r'],
             ['icacls.exe', key_path, '/Grant:r', f'{username}:(R)'],
-            # for diagnostics
+            # Final diagnostic listing of permissions
             ['icacls.exe', key_path],
-        ):
+        ]
+
+        for cmd in commands:
             cp = subprocess.run(
                 cmd,
                 stdin=subprocess.DEVNULL,
                 stdout=subprocess.PIPE,
                 stderr=subprocess.STDOUT,
-                creationflags=SUBPROCESS_CREATION_FLAGS,
+                creationflags=SUBPROCESS_CREATION_FLAGS,  # ensure this is defined/imported
                 text=True
             )
+
             if cp.returncode == 0:
-                logger.debug(' '.join(cmd))
-                logger.debug(cp.stdout.strip('\n'))
+                logger.debug(" ".join(cmd))
+                logger.debug(cp.stdout.strip())
             else:
-                logger.warning(' '.join(cmd))
-                logger.warning(cp.stdout.strip('\n'))
+                logger.warning(" ".join(cmd))
+                logger.warning(cp.stdout.strip())
+
+    else:
+        # ---------------------------------------------------------------------
+        # Unix-based permissions using chmod (Linux, macOS, etc.)
+        # ---------------------------------------------------------------------
+        # Adjust the numeric modes if your project demands stricter or looser perms.
+        # For typical SSH keys, private key = 0o600 or 0o400, public key = 0o644 or 0o600
+        logger.debug("Detected a POSIX-like OS. Using chmod.")
+
+        try:
+            # Example: stricter permissions. 
+            # Commonly: private key = 0o600 (rw-------) or 0o400 (r--------)
+            os.chmod(key_path, 0o400)
+            # Public key can usually be 0o644 (rw-r--r--) or 0o400 (r--------).
+            os.chmod(pubkey_path, 0o400)
+
+            logger.debug(f"Set {key_path} to mode 0o400, {pubkey_path} to mode 0o400")
+        except Exception as e:
+            raise RuntimeError(f"Failed to set permissions on key files: {e}")
 
 
 def ensure_devkit_key():

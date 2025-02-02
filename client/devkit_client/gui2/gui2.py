@@ -517,17 +517,33 @@ class DevkitCommands:
 
     def _browse_files(self, devkit):
         filezilla = None
+
         if platform.system() == 'Windows':
+            # Windows registry lookup
+            import winreg
             try:
                 key = winreg.OpenKey(winreg.HKEY_LOCAL_MACHINE, r'SOFTWARE\Wow6432Node\FileZilla Client')
-            except OSError as e:
+            except OSError:
                 logger.info('FileZilla not found in registry')
             else:
-                filezilla = os.path.join(winreg.QueryValue(key, None), 'filezilla.exe')
+                # e.g. C:\Program Files (x86)\FileZilla FTP Client\filezilla.exe
+                filezilla_path = winreg.QueryValue(key, None)
+                filezilla = os.path.join(filezilla_path, 'filezilla.exe')
+
+        # If filezilla is still None, check PATH (works on Linux and sometimes macOS if symlinked)
         if filezilla is None:
             filezilla = shutil.which('filezilla')
+
+        # If on macOS and still not found, try the .app path
+        if platform.system() == 'Darwin' and (filezilla is None or not os.path.exists(filezilla)):
+            possible_path = "/Applications/FileZilla.app/Contents/MacOS/filezilla"
+            if os.path.exists(possible_path):
+                filezilla = possible_path
+
         if filezilla is None or not os.path.exists(filezilla):
-            raise Exception('FileZilla not found. Please install in order to use this feature.')
+            raise Exception("FileZilla not found. Please install in order to use this feature.")
+
+        # Now we can launch FileZilla with our SFTP URL
         cmd = [filezilla, '-l', 'ask', f'sftp://{devkit.machine.login}@{devkit.machine.address}']
         devkit_client.g_captured_popen_factory.Popen(cmd)
 
