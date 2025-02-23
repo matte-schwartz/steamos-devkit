@@ -1375,7 +1375,42 @@ Start-Sleep -Seconds 3
             creationflags=creationflags,
         )
         return p
+    
+    elif platform.system() == 'Darwin':
+        matched = False
+        with tempfile.NamedTemporaryFile(
+            mode='wt',
+            prefix='devkit-remote-shell',
+            suffix='.command',
+            delete=False,
+        ) as batch:
+            batch.write("#!/bin/bash\n")
+            script_command = " ".join(shlex.quote(arg) for arg in commands)
+            batch.write(script_command + "\n")
+            batch.flush()
+        os.chmod(batch.name, 0o755)
 
+        possible_terminals = [
+            ['/Applications/Utilities/Terminal.app/Contents/MacOS/Terminal'],
+            ['/Applications/iTerm.app/Contents/MacOS/iTerm2'],
+            ['/opt/homebrew/bin/alacritty', '-e'],
+            ['/opt/homebrew/bin/kitty', '-e'],
+        ]
+
+        for terminal_cmd in possible_terminals:
+            main_bin = terminal_cmd[0]
+            if shutil.which(os.path.basename(main_bin)) or os.path.exists(main_bin):
+                matched = True
+                run_cmd = terminal_cmd + [batch.name]
+                logger.info(f'Run in terminal (macOS), cwd {cwd!r}: {" ".join(run_cmd)}')
+                p = subprocess.Popen(
+                    run_cmd,
+                    cwd=cwd,
+                )
+                return p
+        if not matched:
+            raise Exception('Could not find a suitable terminal to run command on macOS!')
+        
     # Linux
     matched = False
     for terminal_prefix in (
